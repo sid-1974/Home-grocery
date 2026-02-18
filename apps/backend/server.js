@@ -9,14 +9,29 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Routes
+const authRoutes = require("./routes/auth");
+const listRoutes = require("./routes/lists");
+const productRoutes = require("./routes/products");
+const cartRoutes = require("./routes/cart");
+
+app.use("/api/auth", authRoutes);
+app.use("/api/lists", listRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
+
 // Basic Route
 app.get("/", (req, res) => {
   res.send("Grocery API is running...");
 });
 
-// Routes
-const productRoutes = require("./routes/products");
-app.use("/api/products", productRoutes);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res
+    .status(500)
+    .send({ message: "Something went wrong!", error: err.message });
+});
 
 // MongoDB Connection
 const mongoURI =
