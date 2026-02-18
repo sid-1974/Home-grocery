@@ -25,6 +25,21 @@ app.get("/", (req, res) => {
   res.send("Grocery API is running...");
 });
 
+// Health check to debug DB connection in production
+app.get("/api/status", (req, res) => {
+  const dbStatus = mongoose.connection.readyState;
+  const statusMap = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting",
+  };
+  res.json({
+    status: "API is alive",
+    database: statusMap[dbStatus] || "unknown",
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -46,6 +61,7 @@ if (!mongoURI) {
 mongoose
   .connect(mongoURI, {
     serverSelectionTimeoutMS: 5000,
+    bufferCommands: false, // This will prevent 'buffering timed out' and show the REAL error
   })
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => {
