@@ -34,12 +34,28 @@ app.use((err, req, res, next) => {
 });
 
 // MongoDB Connection
-const mongoURI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/grocery_db";
+const mongoURI = process.env.MONGODB_URI;
+
+if (!mongoURI) {
+  console.error(
+    "FATAL ERROR: MONGODB_URI is not defined in environment variables.",
+  );
+  process.exit(1);
+}
+
 mongoose
-  .connect(mongoURI)
+  .connect(mongoURI, {
+    serverSelectionTimeoutMS: 5000,
+  })
   .then(() => console.log("MongoDB connected successfully"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .catch((err) => {
+    console.error("MongoDB connection error:", err.message);
+    if (err.message.includes("buffer")) {
+      console.error(
+        "Tip: Check if your server IP is whitelisted in MongoDB Atlas (Network Access).",
+      );
+    }
+  });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
