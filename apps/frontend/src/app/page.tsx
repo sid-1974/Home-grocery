@@ -27,6 +27,7 @@ import {
   Instagram,
   ChevronDown,
   Edit2,
+  Languages,
 } from "lucide-react";
 import { toast, Toaster } from "react-hot-toast";
 import Link from "next/link";
@@ -34,6 +35,7 @@ import Link from "next/link";
 interface Product {
   id: string | number;
   nameEn: string;
+  nameKn?: string;
   image: string;
 }
 
@@ -71,8 +73,13 @@ function GroceryContent() {
   const [showManualModal, setShowManualModal] = useState(false);
 
   // Manual Product Form State
-  const [newProd, setNewProd] = useState({ name: "", imageUrl: "" });
+  const [newProd, setNewProd] = useState({
+    nameEn: "",
+    nameKn: "",
+    imageUrl: "",
+  });
   const [isAddingManual, setIsAddingManual] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   // States for quantity editing
@@ -135,8 +142,8 @@ function GroceryContent() {
 
   const handleManualAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProd.name || !newProd.imageUrl)
-      return toast.error("Please fill all fields");
+    if (!newProd.nameEn || !newProd.imageUrl)
+      return toast.error("Please fill Name and Image URL");
     setIsAddingManual(true);
     try {
       if (editingProduct) {
@@ -148,7 +155,7 @@ function GroceryContent() {
       }
       setShowManualModal(false);
       setEditingProduct(null);
-      setNewProd({ name: "", imageUrl: "" });
+      setNewProd({ nameEn: "", nameKn: "", imageUrl: "" });
       fetchProducts();
     } catch (err) {
       toast.error(editingProduct ? "Failed to update" : "Failed to add");
@@ -157,9 +164,25 @@ function GroceryContent() {
     }
   };
 
+  const handleTranslate = async () => {
+    if (!newProd.nameEn) return toast.error("Enter English name first");
+    setIsTranslating(true);
+    try {
+      const res = await api.get(
+        `/products/translate?text=${encodeURIComponent(newProd.nameEn)}`,
+      );
+      setNewProd({ ...newProd, nameKn: res.data.translatedText });
+      toast.success("Translated to Kannada!");
+    } catch (err) {
+      toast.error("Translation failed");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const openEditModal = (p: Product) => {
     setEditingProduct(p);
-    setNewProd({ name: p.nameEn, imageUrl: p.image });
+    setNewProd({ nameEn: p.nameEn, nameKn: p.nameKn || "", imageUrl: p.image });
     setShowManualModal(true);
   };
 
@@ -279,7 +302,7 @@ function GroceryContent() {
                 onClick={() => {
                   setShowManualModal(false);
                   setEditingProduct(null);
-                  setNewProd({ name: "", imageUrl: "" });
+                  setNewProd({ nameEn: "", nameKn: "", imageUrl: "" });
                 }}
                 className="p-3 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
               >
@@ -292,16 +315,47 @@ function GroceryContent() {
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
                   Product Name
                 </label>
-                <input
-                  autoFocus
-                  placeholder="e.g. Organic Milk"
-                  className="w-full bg-gray-50 rounded-2xl py-4 px-6 outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-700"
-                  value={newProd.name}
-                  onChange={(e) =>
-                    setNewProd({ ...newProd, name: e.target.value })
-                  }
-                />
+                <div className="relative group">
+                  <input
+                    autoFocus
+                    placeholder="e.g. Organic Milk"
+                    className="w-full bg-gray-50 rounded-2xl py-4 px-6 pr-14 outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-700"
+                    value={newProd.nameEn}
+                    onChange={(e) =>
+                      setNewProd({ ...newProd, nameEn: e.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={handleTranslate}
+                    disabled={isTranslating}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white text-green-600 rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                    title="Translate to Kannada"
+                  >
+                    {isTranslating ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Languages size={18} />
+                    )}
+                  </button>
+                </div>
               </div>
+
+              {newProd.nameKn && (
+                <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                  <label className="text-[10px] font-black text-green-600 uppercase tracking-widest ml-1 bg-green-50 px-2 py-0.5 rounded-md">
+                    ಕನ್ನಡ ಹೆಸರು (Kannada Name)
+                  </label>
+                  <input
+                    placeholder="ಹೆಸರನ್ನು ಇಲ್ಲಿ ತೋರಿಸಲಾಗುತ್ತದೆ"
+                    className="w-full bg-green-50/50 border border-green-100 rounded-2xl py-4 px-6 outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-700"
+                    value={newProd.nameKn}
+                    onChange={(e) =>
+                      setNewProd({ ...newProd, nameKn: e.target.value })
+                    }
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
@@ -500,7 +554,12 @@ function GroceryContent() {
                         </div>
                       </div>
                       <h3 className="font-extrabold text-lg leading-tight text-gray-900 group-hover:text-green-600 transition-colors">
-                        {p.nameEn}
+                        {p.nameEn}{" "}
+                        {p.nameKn && (
+                          <span className="text-black-600/60 bold font-medium text-sm">
+                            ({p.nameKn})
+                          </span>
+                        )}
                       </h3>
                       <div className="flex gap-2 mb-4 bg-gray-50 p-1.5 rounded-2xl mt-4">
                         <input
@@ -534,7 +593,7 @@ function GroceryContent() {
                       <button
                         onClick={() =>
                           addToCart(
-                            `${p.nameEn}`,
+                            p.nameKn ? `${p.nameEn} (${p.nameKn})` : p.nameEn,
                             `${prodAmounts[String(p.id)] || "1"} ${prodUnits[String(p.id)] || "kg"}`,
                             p.image,
                           )

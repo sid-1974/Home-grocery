@@ -6,9 +6,10 @@ const auth = require("../middleware/auth");
 // POST: Add a manual product to DB
 router.post("/manual", auth, async (req, res) => {
   try {
-    const { name, imageUrl } = req.body;
+    const { nameEn, nameKn, imageUrl } = req.body;
     const newProduct = new Product({
-      name,
+      nameEn,
+      nameKn,
       imageUrl,
       userId: req.user.id,
     });
@@ -27,7 +28,14 @@ router.get("/", async (req, res) => {
 
   try {
     let dbQuery = {};
-    if (search) dbQuery.name = { $regex: search, $options: "i" };
+    if (search) {
+      dbQuery = {
+        $or: [
+          { nameEn: { $regex: search, $options: "i" } },
+          { nameKn: { $regex: search, $options: "i" } },
+        ],
+      };
+    }
 
     const total = await Product.countDocuments(dbQuery);
     const manualProducts = await Product.find(dbQuery)
@@ -37,7 +45,8 @@ router.get("/", async (req, res) => {
 
     const products = manualProducts.map((p) => ({
       id: p._id,
-      nameEn: p.name,
+      nameEn: p.nameEn,
+      nameKn: p.nameKn,
       image: p.imageUrl,
     }));
 
@@ -59,16 +68,34 @@ router.get("/", async (req, res) => {
 // PATCH: Update product
 router.patch("/manual/:id", auth, async (req, res) => {
   try {
-    const { name, imageUrl } = req.body;
+    const { nameEn, nameKn, imageUrl } = req.body;
     const product = await Product.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
-      { name, imageUrl },
+      { nameEn, nameKn, imageUrl },
       { new: true },
     );
     if (!product) return res.status(404).json({ message: "Product not found" });
     res.json(product);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+// GET: Translate text (English to Kannada)
+router.get("/translate", async (req, res) => {
+  const { text } = req.query;
+  if (!text) return res.status(400).json({ message: "Text is required" });
+
+  try {
+    // Using MyMemory Free Translation API
+    const response = await fetch(
+      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|kn`,
+    );
+    const data = await response.json();
+    const translatedText = data.responseData.translatedText;
+    res.json({ translatedText });
+  } catch (err) {
+    res.status(500).json({ message: "Translation failed", error: err.message });
   }
 });
 
