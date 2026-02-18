@@ -61,18 +61,20 @@ if (!mongoURI) {
 mongoose
   .connect(mongoURI, {
     serverSelectionTimeoutMS: 5000,
-    bufferCommands: false, // This will prevent 'buffering timed out' and show the REAL error
+    bufferCommands: false,
   })
-  .then(() => console.log("MongoDB connected successfully"))
+  .then(() => {
+    console.log("MongoDB connected successfully");
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  })
   .catch((err) => {
     console.error("MongoDB connection error:", err.message);
-    if (err.message.includes("buffer")) {
+    if (err.message.includes("buffer") || err.message.includes("selection")) {
       console.error(
         "Tip: Check if your server IP is whitelisted in MongoDB Atlas (Network Access).",
       );
     }
+    process.exit(1); // Exit if DB connection fails
   });
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
