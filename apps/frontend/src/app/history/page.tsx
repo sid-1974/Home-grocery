@@ -71,7 +71,7 @@ export default function HistoryPage() {
   };
 
   const shareWhatsApp = (shareableId: string) => {
-    const text = `Check out my grocery list on FreshMarket: ${getShareLink(shareableId)}`;
+    const text = `Check out my grocery list on HomeGrocery: ${getShareLink(shareableId)}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -174,7 +174,7 @@ export default function HistoryPage() {
               <ShoppingBasket size={24} />
             </div>
             <span className="text-xl font-black text-green-700 tracking-tighter">
-              FreshMarket
+              HomeGrocery
             </span>
           </div>
           <div className="w-32"></div>

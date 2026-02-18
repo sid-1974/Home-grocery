@@ -248,7 +248,7 @@ function GroceryContent() {
   };
 
   const shareWhatsApp = (id: string) => {
-    const text = `Grocery list on FreshMarket: ${getShareLink(id)}`;
+    const text = `Grocery list on HomeGrocery: ${getShareLink(id)}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -388,7 +388,7 @@ function GroceryContent() {
               <ShoppingBasket size={22} className="sm:w-6 sm:h-6" />
             </div>
             <span className="text-xl font-black text-green-700 hidden lg:block">
-              FreshMarket
+              HomeGrocery
             </span>
           </div>
 

@@ -5,20 +5,25 @@ import api from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { toast, Toaster } from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const res = await api.post("/auth/login", { email, password });
       login(res.data.token, res.data.user);
       toast.success("Login successful!");
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Login failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,9 +59,17 @@ export default function LoginPage() {
           </div>
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all shadow-lg shadow-green-100"
+            disabled={isLoading}
+            className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all shadow-lg shadow-green-100 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            Sign In
+            {isLoading ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                <span>SIGNING IN...</span>
+              </>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
         <p className="text-center mt-8 text-gray-500">
