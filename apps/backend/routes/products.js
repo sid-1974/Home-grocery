@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
 const auth = require("../middleware/auth");
+const admin = require("../middleware/admin");
 
-// POST: Add a manual product to DB
-router.post("/manual", auth, async (req, res) => {
+// POST: Add a manual product to DB (Admin Only)
+router.post("/manual", [auth, admin], async (req, res) => {
   try {
     const { nameEn, nameKn, imageUrl } = req.body;
     const newProduct = new Product({
@@ -65,8 +66,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-// PATCH: Update product
-router.patch("/manual/:id", auth, async (req, res) => {
+// PATCH: Update product (Admin Only)
+router.patch("/manual/:id", [auth, admin], async (req, res) => {
   try {
     const { nameEn, nameKn, imageUrl } = req.body;
     const product = await Product.findOneAndUpdate(
@@ -99,8 +100,8 @@ router.get("/translate", async (req, res) => {
   }
 });
 
-// DELETE: Remove product
-router.delete("/:id", auth, async (req, res) => {
+// DELETE: Remove product (Admin Only)
+router.delete("/:id", [auth, admin], async (req, res) => {
   try {
     const product = await Product.findOneAndDelete({
       _id: req.params.id,

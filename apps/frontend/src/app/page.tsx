@@ -444,6 +444,11 @@ function GroceryContent() {
             <span className="text-xl font-black text-green-700 hidden lg:block">
               HomeGrocery
             </span>
+            {user?.role === "admin" && (
+              <span className="bg-black text-white text-[10px] font-black px-2 py-0.5 rounded-md ml-1 uppercase tracking-tighter hidden sm:block">
+                Admin
+              </span>
+            )}
           </div>
 
           <div className="flex-1 relative" ref={searchRef}>
@@ -464,14 +469,16 @@ function GroceryContent() {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
-            {/* Desktop Add Button */}
-            <button
-              onClick={() => setShowManualModal(true)}
-              className="hidden sm:flex bg-black text-white px-5 py-3 rounded-2xl font-black text-sm items-center gap-2 hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
-            >
-              <PackagePlus size={20} />
-              <span className="hidden lg:inline">ADD PRODUCT</span>
-            </button>
+            {/* Desktop Add Button (Admin Only) */}
+            {user?.role === "admin" && (
+              <button
+                onClick={() => setShowManualModal(true)}
+                className="hidden sm:flex bg-black text-white px-5 py-3 rounded-2xl font-black text-sm items-center gap-2 hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
+              >
+                <PackagePlus size={20} />
+                <span className="hidden lg:inline">ADD PRODUCT</span>
+              </button>
+            )}
 
             <div className="hidden sm:block w-[1px] h-8 bg-gray-100 mx-1"></div>
             <Link
@@ -490,13 +497,15 @@ function GroceryContent() {
         </div>
       </nav>
 
-      {/* Floating Action Button for Mobile */}
-      <button
-        onClick={() => setShowManualModal(true)}
-        className="sm:hidden fixed bottom-6 right-6 z-[60] bg-black text-white p-5 rounded-full shadow-2xl shadow-gray-400 hover:scale-110 active:scale-95 transition-all flex items-center justify-center"
-      >
-        <Plus size={28} strokeWidth={3} />
-      </button>
+      {/* Floating Action Button for Mobile (Admin Only) */}
+      {user?.role === "admin" && (
+        <button
+          onClick={() => setShowManualModal(true)}
+          className="sm:hidden fixed bottom-6 right-6 z-[60] bg-black text-white p-5 rounded-full shadow-2xl shadow-gray-400 hover:scale-110 active:scale-95 transition-all flex items-center justify-center"
+        >
+          <Plus size={28} strokeWidth={3} />
+        </button>
+      )}
 
       {/* Main Content */}
       <main className="pt-28 px-6 max-w-[1400px] mx-auto pb-20">
@@ -522,7 +531,7 @@ function GroceryContent() {
                   No products yet
                 </p>
                 <p className="text-gray-400 font-medium mt-2">
-                  Click "+ ADD PRODUCT" to start your gallery.
+                  Contact Admin 
                 </p>
               </div>
             ) : (
@@ -538,20 +547,22 @@ function GroceryContent() {
                           src={p.image}
                           className="w-full h-full object-cover group-hover/img:scale-110 transition-all duration-700"
                         />
-                        <div className="absolute top-3 right-3 flex flex-col gap-2 translate-x-12 group-hover/img:translate-x-0 transition-transform duration-300">
-                          <button
-                            onClick={() => openEditModal(p)}
-                            className="p-2 bg-white/90 backdrop-blur-md text-gray-600 rounded-xl hover:bg-white hover:text-green-600 shadow-xl border border-white/50"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => deleteProduct(p.id)}
-                            className="p-2 bg-white/90 backdrop-blur-md text-red-500 rounded-xl hover:bg-red-50 shadow-xl border border-white/50"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+                        {user?.role === "admin" && (
+                          <div className="absolute top-3 right-3 flex flex-col gap-2 translate-x-12 group-hover/img:translate-x-0 transition-transform duration-300">
+                            <button
+                              onClick={() => openEditModal(p)}
+                              className="p-2 bg-white/90 backdrop-blur-md text-gray-600 rounded-xl hover:bg-white hover:text-green-600 shadow-xl border border-white/50"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => deleteProduct(p.id)}
+                              className="p-2 bg-white/90 backdrop-blur-md text-red-500 rounded-xl hover:bg-red-50 shadow-xl border border-white/50"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        )}
                       </div>
                       <h3 className="font-extrabold text-lg leading-tight text-gray-900 group-hover:text-green-600 transition-colors">
                         {p.nameEn}{" "}

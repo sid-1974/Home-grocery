@@ -167,7 +167,7 @@ export default function HistoryPage() {
             href="/"
             className="flex items-center gap-2 text-gray-500 hover:text-green-600 transition-colors font-bold text-sm bg-gray-50 px-4 py-2 rounded-xl border border-gray-100"
           >
-            <ChevronLeft size={18} /> BACK TO BUILDER
+            <ChevronLeft size={18} /> BACK TO GROCERY
           </Link>
           <div className="flex items-center gap-2">
             <div className="bg-green-600 p-2 rounded-xl text-white">
