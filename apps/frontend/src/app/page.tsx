@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/api";
@@ -46,7 +46,7 @@ interface CartItem {
 
 const QUANTITY_UNITS = ["kg", "gram", "ltr", "ml", "packet", "item"];
 
-export default function Home() {
+function GroceryContent() {
   const { user, logout, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
@@ -695,5 +695,19 @@ export default function Home() {
       </main>
       <div className="fixed bottom-0 w-full h-8 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none"></div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa]">
+          <Loader2 className="animate-spin text-green-600" size={48} />
+        </div>
+      }
+    >
+      <GroceryContent />
+    </Suspense>
   );
 }
