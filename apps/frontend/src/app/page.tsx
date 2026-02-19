@@ -537,11 +537,11 @@ function GroceryContent() {
       )}
 
       {/* Main Content */}
-      <main className="pt-28 px-6 max-w-[1400px] mx-auto pb-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      <main className="pt-24 sm:pt-28 px-2 sm:px-6 max-w-[1400px] mx-auto pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
           <div className="lg:col-span-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+            <div className="flex items-center justify-between mb-4 sm:mb-8 px-1 sm:px-0">
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
                 Your Groceries
               </h2>
               <button
@@ -578,14 +578,14 @@ function GroceryContent() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6">
                   {products.map((p) => (
                     <div
                       key={p.id}
-                      className="bg-white rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 hover:shadow-[0_20px_50px_rgba(34,197,94,0.1)] hover:border-green-100/50 hover:-translate-y-1 transition-all duration-500 group relative flex flex-col h-full mt-2"
+                      className="bg-white rounded-2xl sm:rounded-[2.5rem] p-2 sm:p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 hover:shadow-[0_20px_50px_rgba(34,197,94,0.1)] hover:border-green-100/50 hover:-translate-y-1 transition-all duration-500 group relative flex flex-col h-full mt-1 sm:mt-2"
                     >
                       {/* Image Layer */}
-                      <div className="aspect-[4/3] bg-gray-50 rounded-[2rem] mb-6 overflow-hidden relative group/img shrink-0">
+                      <div className="aspect-[4/3] bg-gray-50 rounded-xl sm:rounded-[2rem] mb-3 sm:mb-6 overflow-hidden relative group/img shrink-0">
                         <img
                           src={p.image}
                           alt={p.nameEn}
@@ -623,9 +623,9 @@ function GroceryContent() {
                       </div>
 
                       {/* Content Layer */}
-                      <div className="px-2 flex flex-col flex-1">
-                        <div className="mb-4">
-                          <h3 className="font-black text-xl leading-tight text-gray-900 group-hover:text-green-600 transition-colors duration-300">
+                      <div className="px-0.5 sm:px-2 flex flex-col flex-1">
+                        <div className="mb-2 sm:mb-4">
+                          <h3 className="font-black text-sm sm:text-xl leading-tight text-gray-900 group-hover:text-green-600 transition-colors duration-300 truncate">
                             {p.nameEn}
                           </h3>
                           {p.nameKn && (
@@ -635,7 +635,7 @@ function GroceryContent() {
                           )}
                         </div>
 
-                        <div className="mt-auto space-y-4">
+                        <div className="mt-auto space-y-2 sm:space-y-4">
                           {/* Quantity Selector */}
                           <div className="grid grid-cols-1 gap-2 p-1.5 bg-gray-100/30 backdrop-blur-sm rounded-[1.5rem] border border-gray-100 group-hover:bg-white transition-all duration-500">
                             {/* Number Input Side */}
@@ -734,9 +734,13 @@ function GroceryContent() {
                                 [String(p.id)]: "0",
                               });
                             }}
-                            className="w-full bg-green-600 text-white py-4.5 rounded-[1.5rem] font-black text-xs tracking-[0.2em] hover:bg-green-700 hover:shadow-[0_15px_30px_rgba(34,197,94,0.3)] transform active:scale-[0.98] transition-all duration-500 flex items-center justify-center gap-3 mb-2 shadow-lg shadow-green-100/50"
+                            className="w-full bg-green-600 text-white py-3 sm:py-4.5 rounded-[1.25rem] sm:rounded-[1.5rem] font-black text-[8px] min-[320px]:text-[9px] sm:text-xs tracking-tight sm:tracking-[0.2em] whitespace-nowrap hover:bg-green-700 hover:shadow-[0_15px_30px_rgba(34,197,94,0.3)] transform active:scale-[0.98] transition-all duration-500 flex items-center justify-center gap-1 sm:gap-3 mb-1 sm:mb-2 shadow-lg shadow-green-100/50 px-1 sm:px-2"
                           >
-                            <Plus size={20} strokeWidth={3} />
+                            <Plus
+                              size={12}
+                              className="sm:w-5 sm:h-5"
+                              strokeWidth={4}
+                            />
                             ADD TO CART
                           </button>
                         </div>
