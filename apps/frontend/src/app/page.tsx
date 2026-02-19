@@ -541,9 +541,9 @@ function GroceryContent() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
           <div className="lg:col-span-8">
             <div className="flex items-center justify-between mb-4 sm:mb-8 px-1 sm:px-0">
-              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
                 Your Groceries
-              </h2>
+              </h1>
               <button
                 onClick={() =>
                   cartRef.current?.scrollIntoView({ behavior: "smooth" })
