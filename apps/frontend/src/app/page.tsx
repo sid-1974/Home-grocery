@@ -92,6 +92,7 @@ function GroceryContent() {
   const [prodUnits, setProdUnits] = useState<{ [key: string]: string }>({});
 
   const searchRef = useRef<HTMLDivElement>(null);
+  const cartRef = useRef<HTMLDivElement>(null);
 
   const fetchProducts = useCallback(async () => {
     setIsLoadingProducts(true);
@@ -105,7 +106,7 @@ function GroceryContent() {
       const amounts: { [key: string]: string } = {};
       const units: { [key: string]: string } = {};
       res.data.products.forEach((p: Product) => {
-        amounts[String(p.id)] = "1";
+        amounts[String(p.id)] = "0";
         units[String(p.id)] = "kg";
       });
       setProdAmounts((prev) => ({ ...prev, ...amounts }));
@@ -116,6 +117,34 @@ function GroceryContent() {
       setIsLoadingProducts(false);
     }
   }, [page, searchQuery]);
+
+  const getCartItem = useCallback(
+    (p: Product) => {
+      const fullName = p.nameKn ? `${p.nameEn} (${p.nameKn})` : p.nameEn;
+      return cartItems.find((item) => item.name === fullName);
+    },
+    [cartItems],
+  );
+  const calculateTotalWeight = () => {
+    let grams = 0;
+    let ml = 0;
+    cartItems.forEach((item) => {
+      const match = item.quantity.match(/^([\d.]+)\s*(.*)$/);
+      if (!match) return;
+      const amount = parseFloat(match[1]);
+      const unit = match[2].toLowerCase();
+      if (unit === "kg") grams += amount * 1000;
+      else if (unit === "gram" || unit === "g") grams += amount;
+      else if (unit === "ltr") ml += amount * 1000;
+      else if (unit === "ml") ml += amount;
+    });
+
+    const parts = [];
+    if (grams > 0)
+      parts.push(grams >= 1000 ? `${grams / 1000}kg` : `${grams}g`);
+    if (ml > 0) parts.push(ml >= 1000 ? `${ml / 1000}ltr` : `${ml}ml`);
+    return parts.join(" + ") || "0";
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -511,9 +540,24 @@ function GroceryContent() {
       <main className="pt-28 px-6 max-w-[1400px] mx-auto pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8">
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight mb-8">
-              Your Groceries
-            </h2>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+                Your Groceries
+              </h2>
+              <button
+                onClick={() =>
+                  cartRef.current?.scrollIntoView({ behavior: "smooth" })
+                }
+                className="lg:hidden p-3 bg-green-50 text-green-600 rounded-2xl border border-green-100 flex items-center gap-2 relative group"
+              >
+                <ShoppingCart size={24} />
+                {cartItems.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-green-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black animate-in zoom-in duration-300">
+                    {cartItems.length}
+                  </span>
+                )}
+              </button>
+            </div>
 
             {isLoadingProducts ? (
               <div className="py-20 flex flex-col items-center justify-center">
@@ -530,89 +574,173 @@ function GroceryContent() {
                 <p className="text-gray-300 font-black text-2xl uppercase">
                   No products yet
                 </p>
-                <p className="text-gray-400 font-medium mt-2">
-                  Contact Admin 
-                </p>
+                <p className="text-gray-400 font-medium mt-2">Contact Admin</p>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                   {products.map((p) => (
                     <div
                       key={p.id}
-                      className="bg-white rounded-[2rem] p-5 shadow-sm border border-transparent hover:border-green-100 hover:shadow-xl transition-all group relative"
+                      className="bg-white rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 hover:shadow-[0_20px_50px_rgba(34,197,94,0.1)] hover:border-green-100/50 hover:-translate-y-1 transition-all duration-500 group relative flex flex-col h-full mt-2"
                     >
-                      <div className="aspect-square bg-gray-50 rounded-2xl mb-4 overflow-hidden relative group/img">
+                      {/* Image Layer */}
+                      <div className="aspect-[4/3] bg-gray-50 rounded-[2rem] mb-6 overflow-hidden relative group/img shrink-0">
                         <img
                           src={p.image}
-                          className="w-full h-full object-cover group-hover/img:scale-110 transition-all duration-700"
+                          alt={p.nameEn}
+                          className="w-full h-full object-cover group-hover/img:scale-110 transition-all duration-1000 ease-out"
                         />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500" />
+
+                        {/* Status Badges */}
+                        {getCartItem(p) && (
+                          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-left-4 duration-500">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                            <span className="text-[10px] font-black text-gray-900 uppercase tracking-tight">
+                              {getCartItem(p)?.quantity} in cart
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Admin Controls */}
                         {user?.role === "admin" && (
-                          <div className="absolute top-3 right-3 flex flex-col gap-2 translate-x-12 group-hover/img:translate-x-0 transition-transform duration-300">
+                          <div className="absolute top-4 right-4 flex flex-col gap-2 translate-x-12 opacity-0 group-hover/img:translate-x-0 group-hover/img:opacity-100 transition-all duration-500">
                             <button
                               onClick={() => openEditModal(p)}
-                              className="p-2 bg-white/90 backdrop-blur-md text-gray-600 rounded-xl hover:bg-white hover:text-green-600 shadow-xl border border-white/50"
+                              className="p-2.5 bg-white/95 backdrop-blur-md text-gray-600 rounded-2xl hover:bg-white hover:text-green-600 shadow-2xl border border-white/50 transform hover:scale-110 transition-all"
                             >
-                              <Edit2 size={16} />
+                              <Edit2 size={18} />
                             </button>
                             <button
                               onClick={() => deleteProduct(p.id)}
-                              className="p-2 bg-white/90 backdrop-blur-md text-red-500 rounded-xl hover:bg-red-50 shadow-xl border border-white/50"
+                              className="p-2.5 bg-white/95 backdrop-blur-md text-red-500 rounded-2xl hover:bg-red-50 shadow-2xl border border-white/50 transform hover:scale-110 transition-all"
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={18} />
                             </button>
                           </div>
                         )}
                       </div>
-                      <h3 className="font-extrabold text-lg leading-tight text-gray-900 group-hover:text-green-600 transition-colors">
-                        {p.nameEn}{" "}
-                        {p.nameKn && (
-                          <span className="text-black-600/60 bold font-medium text-sm">
-                            ({p.nameKn})
-                          </span>
-                        )}
-                      </h3>
-                      <div className="flex gap-2 mb-4 bg-gray-50 p-1.5 rounded-2xl mt-4">
-                        <input
-                          type="number"
-                          className="w-14 bg-white rounded-xl px-2 py-2.5 text-sm font-black text-center outline-none shadow-sm focus:ring-2 focus:ring-green-500"
-                          value={prodAmounts[String(p.id)] || "1"}
-                          onChange={(e) =>
-                            setProdAmounts({
-                              ...prodAmounts,
-                              [String(p.id)]: e.target.value,
-                            })
-                          }
-                        />
-                        <select
-                          className="flex-1 bg-white rounded-xl px-2 py-2.5 text-[10px] font-black uppercase outline-none appearance-none cursor-pointer shadow-sm focus:ring-2 focus:ring-green-500"
-                          value={prodUnits[String(p.id)] || "kg"}
-                          onChange={(e) =>
-                            setProdUnits({
-                              ...prodUnits,
-                              [String(p.id)]: e.target.value,
-                            })
-                          }
-                        >
-                          {QUANTITY_UNITS.map((u) => (
-                            <option key={u} value={u}>
-                              {u}
-                            </option>
-                          ))}
-                        </select>
+
+                      {/* Content Layer */}
+                      <div className="px-2 flex flex-col flex-1">
+                        <div className="mb-4">
+                          <h3 className="font-black text-xl leading-tight text-gray-900 group-hover:text-green-600 transition-colors duration-300">
+                            {p.nameEn}
+                          </h3>
+                          {p.nameKn && (
+                            <p className="text-gray-400 font-bold text-sm mt-1">
+                              {p.nameKn}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="mt-auto space-y-4">
+                          {/* Quantity Selector */}
+                          <div className="grid grid-cols-2 gap-2 p-1.5 bg-gray-100/30 backdrop-blur-sm rounded-[1.5rem] border border-gray-100 group-hover:bg-white transition-all duration-500">
+                            {/* Number Input Side */}
+                            <div className="flex items-center justify-between bg-white rounded-2xl p-1 shadow-sm border border-gray-100/50">
+                              <button
+                                onClick={() => {
+                                  const val = parseFloat(
+                                    prodAmounts[String(p.id)] || "0",
+                                  );
+                                  setProdAmounts({
+                                    ...prodAmounts,
+                                    [String(p.id)]: String(
+                                      Math.max(0, val - 1),
+                                    ),
+                                  });
+                                }}
+                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all font-black"
+                              >
+                                -
+                              </button>
+                              <input
+                                type="number"
+                                min="0"
+                                className="w-full bg-transparent text-sm font-black text-center outline-none text-gray-900 min-w-0"
+                                value={prodAmounts[String(p.id)] || "0"}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === "" || parseFloat(val) >= 0) {
+                                    setProdAmounts({
+                                      ...prodAmounts,
+                                      [String(p.id)]: val,
+                                    });
+                                  }
+                                }}
+                              />
+                              <button
+                                onClick={() => {
+                                  const val = parseFloat(
+                                    prodAmounts[String(p.id)] || "0",
+                                  );
+                                  setProdAmounts({
+                                    ...prodAmounts,
+                                    [String(p.id)]: String(val + 1),
+                                  });
+                                }}
+                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all font-black"
+                              >
+                                +
+                              </button>
+                            </div>
+
+                            {/* Unit Select Side */}
+                            <div className="relative">
+                              <select
+                                className="w-full h-full bg-white rounded-2xl py-2.5 pl-3 pr-8 text-[11px] font-black uppercase outline-none appearance-none cursor-pointer shadow-sm border border-gray-100/50 focus:border-green-200 transition-all text-gray-900"
+                                value={prodUnits[String(p.id)] || "kg"}
+                                onChange={(e) =>
+                                  setProdUnits({
+                                    ...prodUnits,
+                                    [String(p.id)]: e.target.value,
+                                  })
+                                }
+                              >
+                                {QUANTITY_UNITS.map((u) => (
+                                  <option
+                                    key={u}
+                                    value={u}
+                                    className="text-gray-900 font-bold"
+                                  >
+                                    {u}
+                                  </option>
+                                ))}
+                              </select>
+                              <ChevronDown
+                                size={14}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <button
+                            onClick={() => {
+                              const amt = prodAmounts[String(p.id)] || "0";
+                              if (parseFloat(amt) <= 0)
+                                return toast.error("Select quantity");
+                              addToCart(
+                                p.nameKn
+                                  ? `${p.nameEn} (${p.nameKn})`
+                                  : p.nameEn,
+                                `${amt} ${prodUnits[String(p.id)] || "kg"}`,
+                                p.image,
+                              );
+                              setProdAmounts({
+                                ...prodAmounts,
+                                [String(p.id)]: "0",
+                              });
+                            }}
+                            className="w-full bg-black text-white py-4 rounded-2xl font-black text-xs tracking-widest hover:bg-green-600 hover:shadow-[0_10px_20px_rgba(34,197,94,0.3)] transform active:scale-95 transition-all duration-300 flex items-center justify-center gap-3 mb-2"
+                          >
+                            <Plus size={18} strokeWidth={3} />
+                            ADD TO CART
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() =>
-                          addToCart(
-                            p.nameKn ? `${p.nameEn} (${p.nameKn})` : p.nameEn,
-                            `${prodAmounts[String(p.id)] || "1"} ${prodUnits[String(p.id)] || "kg"}`,
-                            p.image,
-                          )
-                        }
-                        className="w-full bg-green-600 text-white py-4 rounded-[1.25rem] font-black text-xs sm:text-sm hover:bg-green-700 shadow-xl shadow-green-100 flex items-center justify-center gap-2 transform active:scale-95 transition-all mt-2"
-                      >
-                        <Plus size={20} strokeWidth={3} /> ADD TO CART
-                      </button>
                     </div>
                   ))}
                 </div>
@@ -647,17 +775,18 @@ function GroceryContent() {
           </div>
 
           {/* Cart Sidebar */}
-          <div className="lg:col-span-4 sticky top-28 h-fit">
+          <div className="lg:col-span-4 sticky top-28 h-fit" ref={cartRef}>
             <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-gray-200/50 border border-gray-100">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-2 text-gray-900 font-black text-xl">
                   <ShoppingCart className="text-green-600" /> My Cart
                 </div>
-                <span className="bg-green-600 text-white px-3 py-1 rounded-full text-[10px] font-black">
-                  {cartItems.length}
+                <span className="bg-green-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                  Total Items: {cartItems.length}
                 </span>
               </div>
-              <div className="space-y-4 max-h-[400px] overflow-y-auto mb-8 pr-2 custom-scrollbar">
+
+              <div className="space-y-2 max-h-[400px] overflow-y-auto mb-6 pr-2 custom-scrollbar">
                 {cartItems.length === 0 ? (
                   <div className="py-12 text-center opacity-30 grayscale">
                     <ShoppingBasket size={48} className="mx-auto mb-4" />
@@ -669,7 +798,7 @@ function GroceryContent() {
                   cartItems.map((item) => (
                     <div
                       key={item._id}
-                      className="bg-gray-50/50 p-4 rounded-3xl border border-gray-50 flex items-center gap-4 group"
+                      className="bg-gray-50/50 p-2.5 rounded-2xl border border-gray-50 flex items-center gap-3 group"
                     >
                       <img
                         src={item.imageUrl}
@@ -684,9 +813,15 @@ function GroceryContent() {
                           <div className="flex gap-1 mt-1">
                             <input
                               type="number"
+                              min="0"
                               className="w-12 bg-white rounded-lg px-1 py-1 text-[10px] font-black text-center outline-none border border-gray-100"
                               value={editAmount}
-                              onChange={(e) => setEditAmount(e.target.value)}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === "" || parseFloat(val) >= 0) {
+                                  setEditAmount(val);
+                                }
+                              }}
                             />
                             <select
                               className="flex-1 bg-white rounded-lg px-1 py-1 text-[8px] font-black uppercase outline-none border border-gray-100"
@@ -745,6 +880,7 @@ function GroceryContent() {
                   ))
                 )}
               </div>
+
               {cartItems.length > 0 && (
                 <button
                   onClick={saveAndShare}

@@ -195,7 +195,7 @@ export default function HistoryPage() {
             </p>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-4">
             {history.length === 0 ? (
               <div className="bg-white rounded-[3rem] py-24 text-center border-2 border-dashed border-gray-200 font-bold text-gray-300">
                 NO SHARED LISTS YET
@@ -211,13 +211,13 @@ export default function HistoryPage() {
                 return (
                   <div
                     key={list._id}
-                    className="bg-white p-8 md:p-10 rounded-[3rem] shadow-sm border border-gray-100 hover:shadow-2xl hover:shadow-gray-200/50 transition-all group relative overflow-hidden"
+                    className="bg-white p-5 md:p-6 rounded-[2.5rem] shadow-sm border border-gray-100 hover:shadow-2xl hover:shadow-gray-200/50 transition-all group relative overflow-hidden"
                   >
                     <div className="absolute -top-10 -right-10 opacity-[0.02] pointer-events-none group-hover:scale-110 transition-transform">
                       <ShoppingBasket size={200} />
                     </div>
 
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full w-fit">
                           <Calendar size={14} strokeWidth={3} />
@@ -299,12 +299,12 @@ export default function HistoryPage() {
                     </div>
 
                     {expandedId === list._id && (
-                      <div className="mt-8 pt-8 border-t border-gray-50 animate-in slide-in-from-top-4 duration-300">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="mt-4 pt-4 border-t border-gray-50 animate-in slide-in-from-top-4 duration-300">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {list.items.map((item: any, i: number) => (
                             <div
                               key={i}
-                              className="flex items-center gap-4 bg-gray-50/50 p-4 rounded-3xl border border-gray-50 hover:bg-gray-50 transition-colors"
+                              className="flex items-center gap-3 bg-gray-50/50 p-2.5 rounded-2xl border border-gray-50 hover:bg-gray-50 transition-colors"
                             >
                               <div className="h-12 w-12 rounded-xl bg-white p-1 overflow-hidden shadow-sm flex-shrink-0">
                                 <img
