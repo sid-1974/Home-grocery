@@ -637,7 +637,7 @@ function GroceryContent() {
 
                         <div className="mt-auto space-y-4">
                           {/* Quantity Selector */}
-                          <div className="grid grid-cols-2 gap-2 p-1.5 bg-gray-100/30 backdrop-blur-sm rounded-[1.5rem] border border-gray-100 group-hover:bg-white transition-all duration-500">
+                          <div className="grid grid-cols-1 gap-2 p-1.5 bg-gray-100/30 backdrop-blur-sm rounded-[1.5rem] border border-gray-100 group-hover:bg-white transition-all duration-500">
                             {/* Number Input Side */}
                             <div className="flex items-center justify-between bg-white rounded-2xl p-1 shadow-sm border border-gray-100/50">
                               <button
@@ -652,7 +652,7 @@ function GroceryContent() {
                                     ),
                                   });
                                 }}
-                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all font-black"
+                                className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all font-black"
                               >
                                 -
                               </button>
@@ -681,7 +681,7 @@ function GroceryContent() {
                                     [String(p.id)]: String(val + 1),
                                   });
                                 }}
-                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all font-black"
+                                className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all font-black"
                               >
                                 +
                               </button>
@@ -690,7 +690,7 @@ function GroceryContent() {
                             {/* Unit Select Side */}
                             <div className="relative">
                               <select
-                                className="w-full h-full bg-white rounded-2xl py-2.5 pl-3 pr-8 text-[11px] font-black uppercase outline-none appearance-none cursor-pointer shadow-sm border border-gray-100/50 focus:border-green-200 transition-all text-gray-900"
+                                className="w-full h-full bg-white rounded-2xl py-3 pl-4 pr-10 text-[11px] font-black uppercase outline-none appearance-none cursor-pointer shadow-sm border border-gray-100/50 focus:border-green-200 transition-all text-gray-900"
                                 value={prodUnits[String(p.id)] || "kg"}
                                 onChange={(e) =>
                                   setProdUnits({
@@ -711,7 +711,7 @@ function GroceryContent() {
                               </select>
                               <ChevronDown
                                 size={14}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
                               />
                             </div>
                           </div>
@@ -734,9 +734,9 @@ function GroceryContent() {
                                 [String(p.id)]: "0",
                               });
                             }}
-                            className="w-full bg-black text-white py-4 rounded-2xl font-black text-xs tracking-widest hover:bg-green-600 hover:shadow-[0_10px_20px_rgba(34,197,94,0.3)] transform active:scale-95 transition-all duration-300 flex items-center justify-center gap-3 mb-2"
+                            className="w-full bg-green-600 text-white py-4.5 rounded-[1.5rem] font-black text-xs tracking-[0.2em] hover:bg-green-700 hover:shadow-[0_15px_30px_rgba(34,197,94,0.3)] transform active:scale-[0.98] transition-all duration-500 flex items-center justify-center gap-3 mb-2 shadow-lg shadow-green-100/50"
                           >
-                            <Plus size={18} strokeWidth={3} />
+                            <Plus size={20} strokeWidth={3} />
                             ADD TO CART
                           </button>
                         </div>
