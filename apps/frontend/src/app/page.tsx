@@ -28,6 +28,8 @@ import {
   ChevronDown,
   Edit2,
   Languages,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { toast, Toaster } from "react-hot-toast";
 import Link from "next/link";
@@ -57,6 +59,7 @@ function GroceryContent() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   // UI states
   const [shareableId, setShareableId] = useState<string | null>(null);
@@ -94,12 +97,48 @@ function GroceryContent() {
   const searchRef = useRef<HTMLDivElement>(null);
   const cartRef = useRef<HTMLDivElement>(null);
 
+  const [searchLang, setSearchLang] = useState<"en-IN" | "kn-IN">("en-IN");
+
+  const startListening = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Voice search not supported");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = searchLang;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => {
+      setIsListening(false);
+      toast.error("Voice search failed");
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchQuery(transcript);
+      setPage(1);
+      toast.success(`Searching for: ${transcript}`);
+    };
+
+    recognition.start();
+  };
+
   const fetchProducts = useCallback(async () => {
     setIsLoadingProducts(true);
     try {
-      const res = await api.get(
-        `/products?page=${page}&limit=12&search=${searchQuery}`,
-      );
+      const res = await api.get("/products", {
+        params: {
+          page,
+          limit: 12,
+          search: searchQuery,
+        },
+      });
       setProducts(res.data.products);
       setTotalPages(res.data.totalPages);
 
@@ -487,7 +526,7 @@ function GroceryContent() {
             />
             <input
               placeholder="Search..."
-              className="w-full bg-gray-100 rounded-2xl py-2.5 sm:py-3 pl-10 sm:pl-12 pr-4 outline-none focus:ring-2 focus:ring-green-500 transition-all font-bold text-gray-700 text-sm sm:text-base"
+              className="w-full bg-gray-100 rounded-2xl py-2.5 sm:py-3 pl-10 sm:pl-12 pr-28 outline-none focus:ring-2 focus:ring-green-500 transition-all font-bold text-gray-700 text-sm sm:text-base"
               value={searchQuery}
               onFocus={() => setShowSearchSuggestions(true)}
               onChange={(e) => {
@@ -495,6 +534,26 @@ function GroceryContent() {
                 setPage(1);
               }}
             />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <button
+                onClick={() =>
+                  setSearchLang(searchLang === "en-IN" ? "kn-IN" : "en-IN")
+                }
+                className="text-[10px] font-black bg-white px-2 py-1 rounded-lg border border-gray-100 text-gray-600 hover:text-green-600 transition-all shadow-sm"
+              >
+                {searchLang === "en-IN" ? "EN" : "KN"}
+              </button>
+              <button
+                onClick={startListening}
+                className={`p-2 rounded-xl transition-all ${
+                  isListening
+                    ? "bg-red-100 text-red-600 animate-pulse"
+                    : "bg-white text-gray-400 hover:text-green-600 shadow-sm"
+                }`}
+              >
+                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">

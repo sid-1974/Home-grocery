@@ -30,12 +30,15 @@ router.get("/", async (req, res) => {
   try {
     let dbQuery = {};
     if (search) {
-      dbQuery = {
-        $or: [
-          { nameEn: { $regex: search, $options: "i" } },
-          { nameKn: { $regex: search, $options: "i" } },
-        ],
-      };
+      const words = search.split(/\s+/).filter((w) => w.length > 0);
+      if (words.length > 0) {
+        dbQuery.$and = words.map((word) => ({
+          $or: [
+            { nameEn: { $regex: word, $options: "i" } },
+            { nameKn: { $regex: word, $options: "i" } },
+          ],
+        }));
+      }
     }
 
     const total = await Product.countDocuments(dbQuery);
