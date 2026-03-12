@@ -2,12 +2,12 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'HomeGrocery',
-    short_name: 'HomeGrocery',
+    name: 'Home Grocery',
+    short_name: 'Home Grocery',
     description: 'Smart Grocery Shopping List & Sharing',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
+    background_color: '#16a34a',
     theme_color: '#16a34a',
     icons: [
       {

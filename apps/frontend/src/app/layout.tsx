@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "HomeGrocery | Smart Grocery Shopping List & Sharing",
+  title: "Home Grocery | Smart Grocery Shopping List & Sharing",
   description:
     "The easiest way to create, manage, and share your grocery shopping lists. Organize your shopping, save time, and share with family and friends for free.",
   keywords: [
@@ -14,17 +14,17 @@ export const metadata: Metadata = {
     "share grocery list",
     "grocery planner",
     "smart shopping",
-    "HomeGrocery",
+    "Home Grocery",
   ],
-  authors: [{ name: "HomeGrocery Team" }],
-  creator: "HomeGrocery",
-  publisher: "HomeGrocery",
+  authors: [{ name: "Home Grocery Team" }],
+  creator: "Home Grocery",
+  publisher: "Home Grocery",
   manifest: "/manifest.ts",
-  themeColor: "#4ade80",
+  themeColor: "#16a34a",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "HomeGrocery",
+    title: "Home Grocery",
   },
   icons: {
     icon: [
@@ -48,18 +48,18 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "HomeGrocery | Smart Grocery Shopping List & Sharing",
+    title: "Home Grocery | Smart Grocery Shopping List & Sharing",
     description:
       "The easiest way to create, manage, and share your grocery shopping lists. Organize your shopping, save time, and share with family and friends for free.",
     url: "https://home-grocery-frontend.vercel.app",
-    siteName: "HomeGrocery",
+    siteName: "Home Grocery",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "HomeGrocery | Smart Grocery Shopping List & Sharing",
-    description: "Create and share your grocery lists easily with HomeGrocery.",
+    title: "Home Grocery | Smart Grocery Shopping List & Sharing",
+    description: "Create and share your grocery lists easily with Home Grocery.",
   },
   verification: {
     google: "google3ff1073a28fe478e",
@@ -82,7 +82,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              name: "HomeGrocery",
+              name: "Home Grocery",
               url: "https://home-grocery-frontend.vercel.app",
               potentialAction: {
                 "@type": "SearchAction",

@@ -339,7 +339,7 @@ function GroceryContent() {
   };
 
   const shareWhatsApp = (id: string) => {
-    const text = `Grocery list on HomeGrocery: ${getShareLink(id)}`;
+    const text = `Grocery list on Home Grocery: ${getShareLink(id)}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -510,7 +510,7 @@ function GroceryContent() {
               <ShoppingBasket size={22} className="sm:w-6 sm:h-6" />
             </div>
             <span className="text-xl font-black text-green-700 hidden lg:block">
-              HomeGrocery
+              Home Grocery
             </span>
             {user?.role === "admin" && (
               <span className="bg-black text-white text-[10px] font-black px-2 py-0.5 rounded-md ml-1 uppercase tracking-tighter hidden sm:block">
