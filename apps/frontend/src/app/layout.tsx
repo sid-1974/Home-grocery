@@ -27,8 +27,14 @@ export const metadata: Metadata = {
     title: "HomeGrocery",
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icon-512.png" },
+    ],
+    shortcut: ["/favicon.ico"],
   },
   robots: {
     index: true,
