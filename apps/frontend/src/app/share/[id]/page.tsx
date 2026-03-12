@@ -66,18 +66,21 @@ export default function SharePage() {
     <div className="min-h-screen bg-[#f8f9fa] pb-20">
       {/* Premium Header Bar */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 h-20 shadow-sm">
-        <div className="max-w-4xl mx-auto px-6 h-full flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-white/10 rounded-xl overflow-hidden shadow-sm border border-gray-100">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="bg-white/10 rounded-xl overflow-hidden shadow-sm border border-gray-100 shrink-0">
               <img src="/icon.png" alt="Home Grocery Logo" className="w-8 h-8 object-cover" />
             </div>
-            <span className="text-xl font-black text-green-700 tracking-tighter">
+            <span className="text-lg sm:text-xl font-black text-green-700 tracking-tighter truncate">
               Home Grocery
             </span>
           </div>
-          <div className="bg-gray-100 px-4 py-1.5 rounded-full flex items-center gap-2 border border-gray-200">
+          <div className="bg-gray-100 px-3 sm:px-4 py-1.5 rounded-full flex items-center gap-2 border border-gray-200 shrink-0">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-xs font-bold text-gray-600">LIVE VIEW</span>
+            <span className="text-[10px] sm:text-xs font-bold text-gray-600">
+              <span className="hidden xs:inline">LIVE VIEW</span>
+              <span className="xs:hidden font-black">LIVE</span>
+            </span>
           </div>
         </div>
       </nav>
