@@ -19,6 +19,17 @@ export const metadata: Metadata = {
   authors: [{ name: "HomeGrocery Team" }],
   creator: "HomeGrocery",
   publisher: "HomeGrocery",
+  manifest: "/manifest.ts",
+  themeColor: "#4ade80",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "HomeGrocery",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
   robots: {
     index: true,
     follow: true,
@@ -34,7 +45,7 @@ export const metadata: Metadata = {
     title: "HomeGrocery | Smart Grocery Shopping List & Sharing",
     description:
       "The easiest way to create, manage, and share your grocery shopping lists. Organize your shopping, save time, and share with family and friends for free.",
-    url: "https://home-grocery-frontend.vercel.app", // Adjusted to your Vercel URL
+    url: "https://home-grocery-frontend.vercel.app",
     siteName: "HomeGrocery",
     locale: "en_US",
     type: "website",
@@ -43,9 +54,6 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "HomeGrocery | Smart Grocery Shopping List & Sharing",
     description: "Create and share your grocery lists easily with HomeGrocery.",
-  },
-  icons: {
-    icon: "/favicon.ico",
   },
   verification: {
     google: "google3ff1073a28fe478e",
