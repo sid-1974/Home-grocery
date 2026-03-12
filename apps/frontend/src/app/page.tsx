@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/api";
 import {
-  ShoppingBasket,
   Plus,
   Send,
   History,
@@ -851,8 +850,8 @@ function GroceryContent() {
 
               <div className="space-y-2 max-h-[400px] overflow-y-auto mb-6 pr-2 custom-scrollbar">
                 {cartItems.length === 0 ? (
-                  <div className="py-12 text-center opacity-30 grayscale">
-                    <ShoppingBasket size={48} className="mx-auto mb-4" />
+                  <div className="py-12 text-center opacity-30 grayscale items-center flex flex-col justify-center">
+                    <img src="/icon.png" alt="" className="w-16 h-16 object-cover rounded-2xl mb-4" />
                     <p className="text-xs font-black uppercase">
                       Start adding items
                     </p>

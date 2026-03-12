@@ -31,8 +31,13 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
       <Toaster />
       <div className="max-w-md w-full bg-white rounded-[2.5rem] p-12 shadow-2xl shadow-gray-200">
+        <div className="flex justify-center mb-6">
+          <div className="bg-white/10 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+            <img src="/icon.png" alt="Home Grocery Logo" className="w-16 h-16 object-cover" />
+          </div>
+        </div>
         <h2 className="text-3xl font-bold text-center mb-8">
-          Join HomeGrocery
+          Join Home Grocery
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

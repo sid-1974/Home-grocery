@@ -5,7 +5,6 @@ import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/api";
 import {
   History,
-  ShoppingBasket,
   ExternalLink,
   ChevronLeft,
   Loader2,
@@ -170,11 +169,11 @@ export default function HistoryPage() {
             <ChevronLeft size={18} /> BACK TO GROCERY
           </Link>
           <div className="flex items-center gap-2">
-            <div className="bg-green-600 p-2 rounded-xl text-white">
-              <ShoppingBasket size={24} />
+            <div className="bg-white/10 rounded-xl overflow-hidden shadow-sm border border-gray-100">
+              <img src="/icon.png" alt="Home Grocery Logo" className="w-8 h-8 object-cover" />
             </div>
             <span className="text-xl font-black text-green-700 tracking-tighter">
-              HomeGrocery
+              Home Grocery
             </span>
           </div>
           <div className="w-32"></div>
@@ -213,8 +212,8 @@ export default function HistoryPage() {
                     key={list._id}
                     className="bg-white p-5 md:p-6 rounded-[2.5rem] shadow-sm border border-gray-100 hover:shadow-2xl hover:shadow-gray-200/50 transition-all group relative overflow-hidden"
                   >
-                    <div className="absolute -top-10 -right-10 opacity-[0.02] pointer-events-none group-hover:scale-110 transition-transform">
-                      <ShoppingBasket size={200} />
+                    <div className="absolute -top-10 -right-10 opacity-[0.05] pointer-events-none group-hover:scale-110 transition-transform">
+                      <img src="/icon.png" alt="" className="w-40 h-40 object-cover rounded-full" />
                     </div>
 
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
