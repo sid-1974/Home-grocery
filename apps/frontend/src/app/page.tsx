@@ -506,8 +506,8 @@ function GroceryContent() {
       <nav className="fixed top-0 w-full z-50 bg-white border-b border-gray-100 h-20 shadow-sm">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-full flex items-center gap-2 sm:gap-4">
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="bg-green-600 p-2 rounded-xl text-white">
-              <ShoppingBasket size={22} className="sm:w-6 sm:h-6" />
+            <div className="bg-white/10 rounded-xl overflow-hidden shadow-sm">
+              <img src="/icon.png" alt="Home Grocery Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-cover" />
             </div>
             <span className="text-xl font-black text-green-700 hidden lg:block">
               Home Grocery
