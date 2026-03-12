@@ -4,6 +4,10 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
+export const viewport = {
+  themeColor: "#16a34a",
+};
+
 export const metadata: Metadata = {
   title: "Home Grocery | Smart Grocery Shopping List & Sharing",
   description:
@@ -20,7 +24,6 @@ export const metadata: Metadata = {
   creator: "Home Grocery",
   publisher: "Home Grocery",
   manifest: "/manifest.ts",
-  themeColor: "#16a34a",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

@@ -161,30 +161,23 @@ export default function HistoryPage() {
       )}
 
       <nav className="fixed top-0 w-full z-50 bg-white shadow-sm border-b border-gray-100 h-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-8 h-full flex items-center justify-between gap-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-4">
           <Link
             href="/"
-            className="flex items-center gap-1.5 sm:gap-2 text-gray-500 hover:text-green-600 transition-colors font-black text-[10px] sm:text-xs bg-gray-50 px-3 sm:px-4 py-2.5 rounded-xl border border-gray-100 shrink-0"
+            className="flex items-center gap-1 sm:gap-2 text-gray-500 hover:text-green-600 transition-colors font-black text-[10px] sm:text-xs bg-gray-50 px-3 sm:px-4 py-2.5 rounded-xl border border-gray-100 shrink-0"
           >
             <ChevronLeft size={18} />
-            <span className="hidden xs:inline">BACK TO GROCERY</span>
-            <span className="xs:hidden">BACK</span>
+            <span>BACK</span>
           </Link>
 
           <div className="flex items-center gap-2 min-w-0">
-            <div className="bg-white/10 rounded-xl overflow-hidden shadow-sm border border-gray-100 hidden sm:block shrink-0">
-              <img src="/icon.png" alt="Home Grocery Logo" className="w-8 h-8 object-cover" />
+             <div className="bg-white/10 rounded-lg sm:rounded-xl overflow-hidden shadow-sm border border-gray-100 shrink-0">
+              <img src="/icon.png" alt="Home Grocery Logo" className="w-7 h-7 sm:w-10 sm:h-10 object-cover" />
             </div>
-            <span className="text-lg sm:text-xl font-black text-green-700 tracking-tighter truncate leading-none">
+            <span className="text-sm sm:text-xl font-black text-green-700 tracking-tighter truncate leading-none">
               Home Grocery
             </span>
-          </div>
-
-          {/* User profile / Placeholder for balance */}
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex h-8 w-8 rounded-full bg-gray-100 items-center justify-center text-gray-400">
-              <History size={18} />
-            </div>
+            
           </div>
         </div>
       </nav>
