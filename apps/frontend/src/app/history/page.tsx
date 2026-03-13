@@ -74,6 +74,11 @@ export default function HistoryPage() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
+  const shareInstagram = (shareableId: string) => {
+    copyToClipboard(shareableId);
+    window.open("https://www.instagram.com/direct/inbox/", "_blank");
+  };
+
   const reorderList = async (listItems: any[], listId: string) => {
     try {
       if (
@@ -137,13 +142,7 @@ export default function HistoryPage() {
               </button>
 
               <button
-                onClick={() => {
-                  copyToClipboard(showShareModal);
-                  toast(
-                    "Link copied! You can now paste it in Instagram Direct.",
-                    { icon: "📸" },
-                  );
-                }}
+                onClick={() => shareInstagram(showShareModal)}
                 className="flex items-center gap-4 p-5 bg-gray-50 rounded-[2rem] hover:bg-pink-50 group transition-all"
               >
                 <div className="bg-white p-3 rounded-2xl shadow-sm text-pink-600 group-hover:scale-110 transition-transform">

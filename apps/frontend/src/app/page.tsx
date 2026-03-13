@@ -342,6 +342,11 @@ function GroceryContent() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
+  const shareInstagram = (id: string) => {
+    copyToClipboard(id);
+    window.open("https://www.instagram.com/direct/inbox/", "_blank");
+  };
+
   if (authLoading)
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -495,6 +500,15 @@ function GroceryContent() {
                   <MessageCircle />
                 </div>{" "}
                 WhatsApp
+              </button>
+              <button
+                onClick={() => shareInstagram(shareableId)}
+                className="flex items-center gap-4 p-5 bg-gray-50 rounded-[2rem] hover:bg-pink-50 group transition-all font-bold"
+              >
+                <div className="bg-white p-3 rounded-2xl shadow-sm text-pink-600 group-hover:scale-110 transition-transform">
+                  <Instagram size={24} />
+                </div>{" "}
+                Instagram
               </button>
             </div>
           </div>
