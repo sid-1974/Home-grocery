@@ -10,6 +10,9 @@ import { Loader2 } from "lucide-react";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isResetMode, setIsResetMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
 
@@ -27,6 +30,27 @@ export default function LoginPage() {
     }
   };
 
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await api.post("/auth/reset-password", { email, newPassword });
+      toast.success(res.data.message || "Password reset successful!");
+      setIsResetMode(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || "Password reset failed";
+      toast.error(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
       <Toaster />
@@ -36,53 +60,133 @@ export default function LoginPage() {
             <img src="/icon.png" alt="Home Grocery Logo" className="w-16 h-16 object-cover" />
           </div>
         </div>
-        <h2 className="text-3xl font-bold text-center mb-8">Welcome Back</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              required
-              className="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              className="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all shadow-lg shadow-green-100 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="animate-spin" size={20} />
-                <span>SIGNING IN...</span>
-              </>
-            ) : (
-              "Sign In"
-            )}
-          </button>
-        </form>
-        <p className="text-center mt-8 text-gray-500">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-green-600 font-bold">
-            Sign Up
-          </Link>
-        </p>
+        
+        {isResetMode ? (
+          <>
+            <h2 className="text-3xl font-bold text-center mb-8">Reset Password</h2>
+            <form onSubmit={handleResetSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  className="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  className="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  className="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all shadow-lg shadow-green-100 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    <span>RESETTING PASSWORD...</span>
+                  </>
+                ) : (
+                  "Reset Password"
+                )}
+              </button>
+            </form>
+            <p className="text-center mt-8 text-gray-500">
+              Remember your password?{" "}
+              <button
+                type="button"
+                onClick={() => setIsResetMode(false)}
+                className="text-green-600 font-bold hover:underline focus:outline-none"
+              >
+                Sign In
+              </button>
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className="text-3xl font-bold text-center mb-8">Welcome Back</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  className="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsResetMode(true)}
+                    className="text-sm font-bold text-green-600 hover:text-green-700 hover:underline focus:outline-none transition-all"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                <input
+                  type="password"
+                  required
+                  className="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all shadow-lg shadow-green-100 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    <span>SIGNING IN...</span>
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </button>
+            </form>
+            <p className="text-center mt-8 text-gray-500">
+              Don't have an account?{" "}
+              <Link href="/register" className="text-green-600 font-bold">
+                Sign Up
+              </Link>
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
