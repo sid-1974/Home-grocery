@@ -681,6 +681,13 @@ function GroceryContent() {
                         </p>
                       )}
 
+                      {sug.status === "rejected" && sug.rejectionReason && (
+                        <div className="bg-red-50/50 border border-red-100 p-3 rounded-xl mt-2">
+                          <p className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-1">Reason for Rejection</p>
+                          <p className="text-red-700 text-xs font-bold italic">"{sug.rejectionReason}"</p>
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between text-[10px] font-bold text-gray-400 mt-3 border-t border-gray-100/50 pt-2">
                         <span>
                           {user?.role === "admin" && typeof sug.userId === "object" && sug.userId?.email 
