@@ -3,6 +3,8 @@ const router = express.Router();
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const { sendMail } = require("../utils/emailservice");
+const { getRegistrationTemplate } = require("../utils/emailTemplates");
 
 // Register
 router.post("/register", async (req, res) => {
@@ -13,6 +15,13 @@ router.post("/register", async (req, res) => {
 
     user = new User({ email, password });
     await user.save();
+
+    // Send welcome email (asynchronously to avoid blocking user register response)
+    const frontendUrl = process.env.FRONTEND_URL;
+    const emailHtml = getRegistrationTemplate(email, frontendUrl);
+    sendMail(email, "Welcome to Home Grocery! 🛒", emailHtml).catch((error) => {
+      console.error("Failed to send registration email:", error);
+    });
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
