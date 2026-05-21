@@ -31,9 +31,7 @@ router.post("/", auth, async (req, res) => {
     const adminEmail = process.env.EMAIL_USER;
     const emailHtml = getSuggestionTemplate(userEmail, nameEn, nameKn, comments);
     
-    sendMail(adminEmail, `New Grocery Suggestion: ${nameEn} 💡`, emailHtml).catch((error) => {
-      console.error("Failed to send suggestion email to admin:", error);
-    });
+    await sendMail(adminEmail, `New Grocery Suggestion: ${nameEn} 💡`, emailHtml);
 
     res.status(201).json({ message: "Suggestion submitted successfully", suggestion: newSuggestion });
   } catch (err) {

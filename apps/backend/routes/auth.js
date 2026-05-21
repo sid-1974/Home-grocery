@@ -16,12 +16,10 @@ router.post("/register", async (req, res) => {
     user = new User({ email, password });
     await user.save();
 
-    // Send welcome email (asynchronously to avoid blocking user register response)
+    // Send welcome email
     const frontendUrl = process.env.FRONTEND_URL;
     const emailHtml = getRegistrationTemplate(email, frontendUrl);
-    sendMail(email, "Welcome to Home Grocery! 🛒", emailHtml).catch((error) => {
-      console.error("Failed to send registration email:", error);
-    });
+    await sendMail(email, "Welcome to Home Grocery! 🛒", emailHtml);
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
