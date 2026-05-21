@@ -44,11 +44,25 @@ router.get("/", async (req, res) => {
       }
     }
 
-    const total = await Product.countDocuments(dbQuery);
-    const manualProducts = await Product.find(dbQuery)
+    // Use estimatedDocumentCount() for O(1) instant count if there is no search query,
+    // otherwise use countDocuments(dbQuery).
+    const countPromise = search
+      ? Product.countDocuments(dbQuery)
+      : Product.estimatedDocumentCount();
+
+    // Select only needed fields and use .lean() to bypass heavy Mongoose document instantiation.
+    const productsPromise = Product.find(dbQuery)
+      .select("nameEn nameKn imageUrl")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .lean();
+
+    // Run both queries concurrently to avoid sequential blocking.
+    const [total, manualProducts] = await Promise.all([
+      countPromise,
+      productsPromise,
+    ]);
 
     const products = manualProducts.map((p) => ({
       id: p._id,
