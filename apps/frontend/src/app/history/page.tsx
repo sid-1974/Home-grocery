@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast, Toaster } from "react-hot-toast";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function HistoryPage() {
   const { user, loading: authLoading } = useAuth();
@@ -30,6 +31,16 @@ export default function HistoryPage() {
   const [showShareModal, setShowShareModal] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Custom Confirmation Dialog State
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmLabel?: string;
+    variant?: "primary" | "danger" | "warning" | "dark";
+    onConfirm: () => void;
+  } | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -48,15 +59,25 @@ export default function HistoryPage() {
     }
   };
 
-  const deleteList = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this shared list?")) return;
-    try {
-      await api.delete(`/lists/${id}`);
-      setHistory(history.filter((p) => p._id !== id));
-      toast.success("List deleted from history");
-    } catch (err) {
-      toast.error("Failed to delete list");
-    }
+  const deleteList = (id: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Shared List",
+      message: "Are you sure you want to delete this shared list from your history?",
+      confirmLabel: "Delete",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          await api.delete(`/lists/${id}`);
+          setHistory(history.filter((p) => p._id !== id));
+          toast.success("List deleted from history");
+        } catch (err) {
+          toast.error("Failed to delete list");
+        } finally {
+          setConfirmDialog(null);
+        }
+      },
+    });
   };
 
   const getShareLink = (shareableId: string) =>
@@ -79,20 +100,25 @@ export default function HistoryPage() {
     window.open("https://www.instagram.com/direct/inbox/", "_blank");
   };
 
-  const reorderList = async (listItems: any[], listId: string) => {
-    try {
-      if (
-        !confirm(
-          "This will add all items from this list to your current cart. Continue?",
-        )
-      )
-        return;
-      await api.post("/cart/batch", { items: listItems, replace: true });
-      toast.success("List loaded! Redirecting to editor...");
-      setTimeout(() => (window.location.href = `/?edit=${listId}`), 1500);
-    } catch (err) {
-      toast.error("Failed to add items to cart");
-    }
+  const reorderList = (listItems: any[], listId: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Load List to Cart",
+      message: "This will add all items from this list to your current cart. Continue?",
+      confirmLabel: "Continue",
+      variant: "primary",
+      onConfirm: async () => {
+        try {
+          await api.post("/cart/batch", { items: listItems, replace: true });
+          toast.success("List loaded! Redirecting to editor...");
+          setTimeout(() => (window.location.href = `/?edit=${listId}`), 1500);
+        } catch (err) {
+          toast.error("Failed to add items to cart");
+        } finally {
+          setConfirmDialog(null);
+        }
+      },
+    });
   };
 
   if (authLoading || loading)
@@ -333,6 +359,18 @@ export default function HistoryPage() {
           </div>
         </div>
       </main>
+
+      {confirmDialog && (
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmLabel={confirmDialog.confirmLabel}
+          variant={confirmDialog.variant}
+          onConfirm={confirmDialog.onConfirm}
+          onClose={() => setConfirmDialog(null)}
+        />
+      )}
     </div>
   );
 }

@@ -34,9 +34,10 @@ import {
 import { toast, Toaster } from "react-hot-toast";
 import Link from "next/link";
 
-import { Product, CartItem, QUANTITY_UNITS } from "@/types";
+import { Product, CartItem, Suggestion, QUANTITY_UNITS } from "@/types";
 import { Button } from "@/components/Button";
 import { ProductCard } from "@/components/ProductCard";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 
 
@@ -93,6 +94,21 @@ function GroceryContent() {
   });
   const [isSubmittingSuggest, setIsSubmittingSuggest] = useState(false);
   const [isTranslatingSuggest, setIsTranslatingSuggest] = useState(false);
+
+  // Suggestions List State
+  const [showSuggestionsListModal, setShowSuggestionsListModal] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+
+  // Custom Confirmation Dialog State
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmLabel?: string;
+    variant?: "primary" | "danger" | "warning" | "dark";
+    onConfirm: () => void;
+  } | null>(null);
 
   // States for quantity editing
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -278,22 +294,98 @@ function GroceryContent() {
     }
   };
 
+  const fetchSuggestions = async () => {
+    setIsLoadingSuggestions(true);
+    try {
+      const res = await api.get("/suggestions");
+      setSuggestions(res.data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load suggestions");
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showSuggestionsListModal) {
+      fetchSuggestions();
+    }
+  }, [showSuggestionsListModal]);
+
+  const handleDeleteSuggestion = (id: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Suggestion",
+      message: "Are you sure you want to delete this suggestion? This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          await api.delete(`/suggestions/${id}`);
+          toast.success("Suggestion deleted successfully!");
+          fetchSuggestions();
+        } catch (err) {
+          console.error(err);
+          toast.error("Failed to delete suggestion");
+        } finally {
+          setConfirmDialog(null);
+        }
+      },
+    });
+  };
+
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    try {
+      await api.patch(`/suggestions/${id}/status`, { status: newStatus });
+      toast.success(`Suggestion status updated to ${newStatus}!`);
+      fetchSuggestions();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update status");
+    }
+  };
+
   const openEditModal = useCallback((p: Product) => {
     setEditingProduct(p);
     setNewProd({ nameEn: p.nameEn, nameKn: p.nameKn || "", imageUrl: p.image });
     setShowManualModal(true);
   }, []);
 
-  const deleteProduct = useCallback(async (id: string | number) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
-    try {
-      await api.delete(`/products/${id}`);
-      toast.success("Deleted");
-      fetchProducts();
-    } catch (err) {
-      toast.error("Failed to delete");
-    }
-  }, [fetchProducts]);
+  const deleteProduct = useCallback((id: string | number) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Product",
+      message: "Are you sure you want to delete this product? This will remove it from the catalog.",
+      confirmLabel: "Delete",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          await api.delete(`/products/${id}`);
+          toast.success("Deleted");
+          fetchProducts();
+        } catch (err) {
+          toast.error("Failed to delete");
+        } finally {
+          setConfirmDialog(null);
+        }
+      },
+    });
+  }, [fetchProducts, setConfirmDialog]);
+
+  const handleLogoutClick = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Sign Out",
+      message: "Are you sure you want to sign out of your account?",
+      confirmLabel: "Sign Out",
+      variant: "dark",
+      onConfirm: () => {
+        logout();
+        setConfirmDialog(null);
+      },
+    });
+  };
 
   const addToCart = useCallback(async (
     name: string,
@@ -486,6 +578,128 @@ function GroceryContent() {
                 SUBMIT SUGGESTION
               </Button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Suggestions List Modal */}
+      {showSuggestionsListModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6">
+          <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 max-w-2xl w-full shadow-2xl animate-in zoom-in-95 duration-300 max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center mb-6 shrink-0">
+              <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900 flex items-center gap-2">
+                <MessageCircle className="text-green-600 animate-pulse" size={28} />
+                <span>Suggestions {user?.role === "admin" ? "(Admin View)" : ""}</span>
+              </h3>
+              <button
+                onClick={() => setShowSuggestionsListModal(false)}
+                className="p-3 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
+              >
+                <X size={28} />
+              </button>
+            </div>
+
+            {isLoadingSuggestions ? (
+              <div className="flex flex-col items-center justify-center py-20 flex-1">
+                <Loader2 className="animate-spin text-green-600 mb-4" size={40} />
+                <span className="text-gray-500 font-bold">Loading suggestions...</span>
+              </div>
+            ) : suggestions.length === 0 ? (
+              <div className="text-center py-20 flex-1">
+                <p className="text-gray-400 font-bold text-lg mb-2">No suggestions found.</p>
+                <p className="text-gray-500 text-sm">
+                  {user?.role === "admin" 
+                    ? "Users have not submitted any suggestions yet." 
+                    : "You haven't submitted any suggestions yet."}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-y-auto pr-2 space-y-4 flex-1">
+                {suggestions.map((sug) => {
+                  const suggestionUserId = typeof sug.userId === "object" ? sug.userId?._id : sug.userId;
+                  const isOwnerOrAdmin = user?.role === "admin" || (suggestionUserId && suggestionUserId === user?.id);
+                  
+                  return (
+                    <div 
+                      key={sug._id} 
+                      className="p-5 bg-gray-50/60 rounded-2xl border border-gray-100/50 hover:bg-white hover:shadow-lg transition-all duration-300 relative group/sug"
+                    >
+                      <div className="flex justify-between items-start gap-4 mb-2">
+                        <div>
+                          <h4 className="font-black text-gray-900 text-lg leading-tight">
+                            {sug.nameEn}
+                          </h4>
+                          {sug.nameKn && (
+                            <p className="text-green-600 font-bold text-sm mt-0.5">
+                              {sug.nameKn}
+                            </p>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-2 shrink-0">
+                          {/* Status Badge */}
+                          <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider ${
+                            sug.status === "approved" 
+                              ? "bg-green-100 text-green-700" 
+                              : sug.status === "rejected"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}>
+                            {sug.status || "pending"}
+                          </span>
+
+                          {/* Admin Status Dropdown */}
+                          {user?.role === "admin" && (
+                            <select
+                              value={sug.status || "pending"}
+                              onChange={(e) => handleUpdateStatus(sug._id, e.target.value)}
+                              className="px-2 py-1 bg-white border border-gray-200 rounded-xl text-[11px] font-black text-gray-700 outline-none cursor-pointer hover:border-green-300 transition-colors shadow-sm"
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="approved">Approve</option>
+                              <option value="rejected">Reject</option>
+                            </select>
+                          )}
+
+                          {/* Delete Button */}
+                          {isOwnerOrAdmin && (
+                            <button
+                              onClick={() => handleDeleteSuggestion(sug._id)}
+                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                              title="Delete Suggestion"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {sug.comments && (
+                        <p className="text-gray-500 text-sm font-semibold bg-white p-3 rounded-xl border border-gray-100 mt-2 italic">
+                          "{sug.comments}"
+                        </p>
+                      )}
+
+                      <div className="flex items-center justify-between text-[10px] font-bold text-gray-400 mt-3 border-t border-gray-100/50 pt-2">
+                        <span>
+                          {user?.role === "admin" && typeof sug.userId === "object" && sug.userId?.email 
+                            ? `Suggested by: ${sug.userId.email}` 
+                            : "My Suggestion"}
+                        </span>
+                        <span>
+                          {new Date(sug.createdAt).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -718,6 +932,15 @@ function GroceryContent() {
             )}
 
             <div className="hidden sm:block w-[1px] h-8 bg-gray-100 mx-1"></div>
+            {user && (
+              <button
+                onClick={() => setShowSuggestionsListModal(true)}
+                className="p-2 sm:p-3 bg-gray-50 rounded-full hover:bg-green-50 text-gray-500 hover:text-green-600 transition-all"
+                title="View Suggestions"
+              >
+                <MessageCircle size={20} className="sm:w-[22px] sm:h-[22px]" />
+              </button>
+            )}
             <Link
               href="/history"
               className="p-2 sm:p-3 bg-gray-50 rounded-full hover:bg-green-50 text-gray-500 hover:text-green-600 transition-all"
@@ -725,7 +948,7 @@ function GroceryContent() {
               <History size={20} className="sm:w-[22px] sm:h-[22px]" />
             </Link>
             <button
-              onClick={logout}
+              onClick={handleLogoutClick}
               className="p-2 sm:p-3 bg-gray-50 rounded-full hover:bg-red-50 text-gray-500 hover:text-red-600 transition-all"
             >
               <LogOut size={20} className="sm:w-[22px] sm:h-[22px]" />
@@ -986,6 +1209,18 @@ function GroceryContent() {
         </div>
       </main>
       <div className="fixed bottom-0 w-full h-8 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none"></div>
+
+      {confirmDialog && (
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmLabel={confirmDialog.confirmLabel}
+          variant={confirmDialog.variant}
+          onConfirm={confirmDialog.onConfirm}
+          onClose={() => setConfirmDialog(null)}
+        />
+      )}
     </div>
   );
 }

@@ -6,6 +6,11 @@ const suggestionSchema = new mongoose.Schema(
     nameKn: { type: String },
     comments: { type: String },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );

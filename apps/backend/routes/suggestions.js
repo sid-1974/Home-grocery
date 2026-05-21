@@ -39,4 +39,60 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
+// GET: Get list of suggestions (Admin sees all, User sees only their own)
+router.get("/", auth, async (req, res) => {
+  try {
+    let query = {};
+    if (req.user.role !== "admin") {
+      query.userId = req.user.id;
+    }
+    const suggestions = await Suggestion.find(query)
+      .populate("userId", "email")
+      .sort({ createdAt: -1 });
+    res.json(suggestions);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE: Delete a suggestion (Creator or Admin only)
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    const suggestion = await Suggestion.findById(req.params.id);
+    if (!suggestion) {
+      return res.status(404).json({ message: "Suggestion not found" });
+    }
+    // Check authorization: Admin or the owner of suggestion
+    if (req.user.role !== "admin" && suggestion.userId.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this suggestion" });
+    }
+    await Suggestion.findByIdAndDelete(req.params.id);
+    res.json({ message: "Suggestion deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PATCH: Update suggestion status (Admin Only)
+const admin = require("../middleware/admin");
+router.patch("/:id/status", [auth, admin], async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!["pending", "approved", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+    const suggestion = await Suggestion.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    ).populate("userId", "email");
+    if (!suggestion) {
+      return res.status(404).json({ message: "Suggestion not found" });
+    }
+    res.json(suggestion);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
