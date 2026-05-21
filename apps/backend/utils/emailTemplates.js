@@ -208,6 +208,156 @@ const getRegistrationTemplate = (email, frontendUrl = process.env.FRONTEND_URL )
   `;
 };
 
+const getSuggestionTemplate = (userEmail, nameEn, nameKn = "", comments = "") => {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Product Suggestion</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f9fafb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .wrapper {
+      width: 100%;
+      background-color: #f9fafb;
+      padding: 40px 0;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      border: 1px solid #f3f4f6;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo-container {
+      display: inline-block;
+      padding: 4px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid #f3f4f6;
+    }
+    .logo {
+      width: 64px;
+      height: 64px;
+      display: block;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+    .heading {
+      color: #111827;
+      font-size: 24px;
+      font-weight: 800;
+      text-align: center;
+      margin: 0 0 16px 0;
+      letter-spacing: -0.025em;
+    }
+    .subheading {
+      color: #4b5563;
+      font-size: 15px;
+      line-height: 24px;
+      text-align: center;
+      margin: 0 0 32px 0;
+    }
+    .card-info {
+      background-color: #f9fafb;
+      border: 1px solid #f3f4f6;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 32px;
+    }
+    .info-item {
+      margin-bottom: 16px;
+    }
+    .info-item:last-child {
+      margin-bottom: 0;
+    }
+    .info-label {
+      color: #6b7280;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .info-value {
+      color: #111827;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .footer {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 13px;
+      line-height: 20px;
+      margin-top: 40px;
+      border-top: 1px solid #f3f4f6;
+      padding-top: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <div class="logo-container">
+          <img src="cid:logo" alt="Home Grocery Logo" class="logo">
+        </div>
+      </div>
+      
+      <h1 class="heading">New Suggestion Received! 💡</h1>
+      <p class="subheading">A user has suggested a new item to be added to the grocery list.</p>
+      
+      <div class="card-info">
+        <div class="info-item">
+          <span class="info-label">Suggested By</span>
+          <span class="info-value">${userEmail}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Product Name (English)</span>
+          <span class="info-value" style="color: #16a34a;">${nameEn}</span>
+        </div>
+        ${nameKn ? `
+        <div class="info-item">
+          <span class="info-label">Product Name (Kannada)</span>
+          <span class="info-value">${nameKn}</span>
+        </div>
+        ` : ''}
+        ${comments ? `
+        <div class="info-item">
+          <span class="info-label">Comments / Reason</span>
+          <span class="info-value" style="font-style: italic; color: #4b5563;">"${comments}"</span>
+        </div>
+        ` : ''}
+      </div>
+
+      <div class="footer">
+        <p>This is an automated notification sent from your Home Grocery App backend.</p>
+        <p>&copy; ${new Date().getFullYear()} Home Grocery. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+};
+
 module.exports = {
-  getRegistrationTemplate
+  getRegistrationTemplate,
+  getSuggestionTemplate
 };

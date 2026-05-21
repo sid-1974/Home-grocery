@@ -4,6 +4,9 @@ const Product = require("../models/Product");
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
 
+// In-memory translation cache (English -> Kannada)
+const translationCache = new Map();
+
 // POST: Add a manual product to DB (Admin Only)
 router.post("/manual", [auth, admin], async (req, res) => {
   try {
@@ -90,6 +93,11 @@ router.get("/translate", async (req, res) => {
   const { text } = req.query;
   if (!text) return res.status(400).json({ message: "Text is required" });
 
+  const cacheKey = text.toLowerCase().trim();
+  if (translationCache.has(cacheKey)) {
+    return res.json({ translatedText: translationCache.get(cacheKey) });
+  }
+
   try {
     // Using MyMemory Free Translation API
     const response = await fetch(
@@ -97,6 +105,10 @@ router.get("/translate", async (req, res) => {
     );
     const data = await response.json();
     const translatedText = data.responseData.translatedText;
+
+    // Cache the result
+    translationCache.set(cacheKey, translatedText);
+
     res.json({ translatedText });
   } catch (err) {
     res.status(500).json({ message: "Translation failed", error: err.message });

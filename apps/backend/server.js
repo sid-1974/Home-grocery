@@ -15,11 +15,13 @@ const authRoutes = require("./routes/auth");
 const listRoutes = require("./routes/lists");
 const productRoutes = require("./routes/products");
 const cartRoutes = require("./routes/cart");
+const suggestionRoutes = require("./routes/suggestions");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/lists", listRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/suggestions", suggestionRoutes);
 
 // Basic Route
 app.get("/", (req, res) => {

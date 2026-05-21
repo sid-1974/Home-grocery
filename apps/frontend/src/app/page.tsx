@@ -29,25 +29,16 @@ import {
   Languages,
   Mic,
   MicOff,
+  Lightbulb,
 } from "lucide-react";
 import { toast, Toaster } from "react-hot-toast";
 import Link from "next/link";
 
-interface Product {
-  id: string | number;
-  nameEn: string;
-  nameKn?: string;
-  image: string;
-}
+import { Product, CartItem, QUANTITY_UNITS } from "@/types";
+import { Button } from "@/components/Button";
+import { ProductCard } from "@/components/ProductCard";
 
-interface CartItem {
-  _id?: string;
-  name: string;
-  quantity: string;
-  imageUrl: string;
-}
 
-const QUANTITY_UNITS = ["kg", "gram", "ltr", "ml", "packet", "item"];
 
 function GroceryContent() {
   const { user, logout, loading: authLoading } = useAuth();
@@ -55,10 +46,19 @@ function GroceryContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [localSearchQuery, setLocalSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isListening, setIsListening] = useState(false);
+
+  // Debounce search keystrokes to prevent rendering lag
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(localSearchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [localSearchQuery]);
 
   // UI states
   const [shareableId, setShareableId] = useState<string | null>(null);
@@ -84,14 +84,22 @@ function GroceryContent() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
+  // Suggestion Form State
+  const [showSuggestModal, setShowSuggestModal] = useState(false);
+  const [suggestProd, setSuggestProd] = useState({
+    nameEn: "",
+    nameKn: "",
+    comments: "",
+  });
+  const [isSubmittingSuggest, setIsSubmittingSuggest] = useState(false);
+  const [isTranslatingSuggest, setIsTranslatingSuggest] = useState(false);
+
   // States for quantity editing
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState("");
   const [editUnit, setEditUnit] = useState("kg");
 
-  // Product specific quantity states
-  const [prodAmounts, setProdAmounts] = useState<{ [key: string]: string }>({});
-  const [prodUnits, setProdUnits] = useState<{ [key: string]: string }>({});
+
 
   const searchRef = useRef<HTMLDivElement>(null);
   const cartRef = useRef<HTMLDivElement>(null);
@@ -120,6 +128,7 @@ function GroceryContent() {
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
+      setLocalSearchQuery(transcript);
       setSearchQuery(transcript);
       setPage(1);
       toast.success(`Searching for: ${transcript}`);
@@ -141,14 +150,7 @@ function GroceryContent() {
       setProducts(res.data.products);
       setTotalPages(res.data.totalPages);
 
-      const amounts: { [key: string]: string } = {};
-      const units: { [key: string]: string } = {};
-      res.data.products.forEach((p: Product) => {
-        amounts[String(p.id)] = "0";
-        units[String(p.id)] = "kg";
-      });
-      setProdAmounts((prev) => ({ ...prev, ...amounts }));
-      setProdUnits((prev) => ({ ...prev, ...units }));
+
     } catch (err) {
       console.error("Error fetching products:", err);
     } finally {
@@ -185,10 +187,7 @@ function GroceryContent() {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchProducts();
-    }, 300);
-    return () => clearTimeout(timer);
+    fetchProducts();
   }, [fetchProducts]);
 
   useEffect(() => {
@@ -247,13 +246,45 @@ function GroceryContent() {
     }
   };
 
-  const openEditModal = (p: Product) => {
+  const handleSuggestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!suggestProd.nameEn) return toast.error("Please fill Name (English)");
+    setIsSubmittingSuggest(true);
+    try {
+      await api.post("/suggestions", suggestProd);
+      toast.success("Suggestion submitted successfully to Admin! 💡");
+      setShowSuggestModal(false);
+      setSuggestProd({ nameEn: "", nameKn: "", comments: "" });
+    } catch (err) {
+      toast.error("Failed to submit suggestion");
+    } finally {
+      setIsSubmittingSuggest(false);
+    }
+  };
+
+  const handleSuggestTranslate = async () => {
+    if (!suggestProd.nameEn) return toast.error("Enter English name first");
+    setIsTranslatingSuggest(true);
+    try {
+      const res = await api.get(
+        `/products/translate?text=${encodeURIComponent(suggestProd.nameEn)}`,
+      );
+      setSuggestProd({ ...suggestProd, nameKn: res.data.translatedText });
+      toast.success("Translated to Kannada!");
+    } catch (err) {
+      toast.error("Translation failed");
+    } finally {
+      setIsTranslatingSuggest(false);
+    }
+  };
+
+  const openEditModal = useCallback((p: Product) => {
     setEditingProduct(p);
     setNewProd({ nameEn: p.nameEn, nameKn: p.nameKn || "", imageUrl: p.image });
     setShowManualModal(true);
-  };
+  }, []);
 
-  const deleteProduct = async (id: string | number) => {
+  const deleteProduct = useCallback(async (id: string | number) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
       await api.delete(`/products/${id}`);
@@ -262,9 +293,9 @@ function GroceryContent() {
     } catch (err) {
       toast.error("Failed to delete");
     }
-  };
+  }, [fetchProducts]);
 
-  const addToCart = async (
+  const addToCart = useCallback(async (
     name: string,
     quantity: string,
     imageUrl: string,
@@ -276,7 +307,7 @@ function GroceryContent() {
     } catch (err) {
       toast.error("Failed to add item");
     }
-  };
+  }, []);
 
   const removeItem = async (itemId: string) => {
     try {
@@ -361,6 +392,103 @@ function GroceryContent() {
   return (
     <div className="min-h-screen bg-[#f8f9fa]">
       <Toaster />
+
+      {/* Suggest Product Modal */}
+      {showSuggestModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6">
+          <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-center mb-6 sm:mb-8">
+              <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900 flex items-center gap-2">
+                <Lightbulb className="text-green-600 animate-bounce" size={28} />
+                <span>Suggest Item</span>
+              </h3>
+              <button
+                onClick={() => {
+                  setShowSuggestModal(false);
+                  setSuggestProd({ nameEn: "", nameKn: "", comments: "" });
+                }}
+                className="p-3 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
+              >
+                <X size={28} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSuggestSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                  Item Name (English)
+                </label>
+                <div className="relative group">
+                  <input
+                    autoFocus
+                    placeholder="e.g. Fresh Mangoes"
+                    className="w-full bg-gray-50 rounded-2xl py-4 px-6 pr-14 outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-700"
+                    value={suggestProd.nameEn}
+                    onChange={(e) =>
+                      setSuggestProd({ ...suggestProd, nameEn: e.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSuggestTranslate}
+                    disabled={isTranslatingSuggest}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white text-green-600 rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                    title="Translate to Kannada"
+                  >
+                    {isTranslatingSuggest ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Languages size={18} />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {suggestProd.nameKn && (
+                <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                  <label className="text-[10px] font-black text-green-600 uppercase tracking-widest ml-1 bg-green-50 px-2 py-0.5 rounded-md">
+                    ಕನ್ನಡ ಹೆಸರು (Kannada Name)
+                  </label>
+                  <input
+                    placeholder="Kannada translation"
+                    className="w-full bg-green-50/50 border border-green-100 rounded-2xl py-4 px-6 outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-700"
+                    value={suggestProd.nameKn}
+                    onChange={(e) =>
+                      setSuggestProd({ ...suggestProd, nameKn: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                  Comments / Reason (Optional)
+                </label>
+                <textarea
+                  placeholder="Why do we need this item? (e.g. for dinner party)"
+                  rows={3}
+                  className="w-full bg-gray-50 rounded-2xl py-4 px-6 outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-700 text-sm resize-none"
+                  value={suggestProd.comments}
+                  onChange={(e) =>
+                    setSuggestProd({ ...suggestProd, comments: e.target.value })
+                  }
+                />
+              </div>
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                isLoading={isSubmittingSuggest}
+                icon={<Send size={18} />}
+                className="w-full mt-4"
+              >
+                SUBMIT SUGGESTION
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Manual Product Modal */}
       {showManualModal && (
@@ -449,19 +577,16 @@ function GroceryContent() {
                 </div>
               </div>
 
-              <button
-                disabled={isAddingManual}
-                className="w-full bg-black text-white py-4 sm:py-5 rounded-[1.5rem] sm:rounded-[2rem] font-black text-base sm:text-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-3 shadow-xl shadow-gray-200 mt-4 disabled:opacity-50"
+              <Button
+                type="submit"
+                variant="dark"
+                size="lg"
+                isLoading={isAddingManual}
+                icon={editingProduct ? <Edit2 size={18} /> : <Plus size={18} />}
+                className="w-full mt-4"
               >
-                {isAddingManual ? (
-                  <Loader2 className="animate-spin" />
-                ) : editingProduct ? (
-                  <Edit2 />
-                ) : (
-                  <Plus />
-                )}{" "}
                 {editingProduct ? "UPDATE PRODUCT" : "SAVE PRODUCT"}
-              </button>
+              </Button>
             </form>
           </div>
         </div>
@@ -540,10 +665,10 @@ function GroceryContent() {
             <input
               placeholder="Search..."
               className="w-full bg-gray-100 rounded-2xl py-2.5 sm:py-3 pl-10 sm:pl-12 pr-28 outline-none focus:ring-2 focus:ring-green-500 transition-all font-bold text-gray-700 text-sm sm:text-base"
-              value={searchQuery}
+              value={localSearchQuery}
               onFocus={() => setShowSearchSuggestions(true)}
               onChange={(e) => {
-                setSearchQuery(e.target.value);
+                setLocalSearchQuery(e.target.value);
                 setPage(1);
               }}
             />
@@ -581,6 +706,17 @@ function GroceryContent() {
               </button>
             )}
 
+            {/* Desktop Suggest Button (Standard User Only) */}
+            {user?.role !== "admin" && (
+              <button
+                onClick={() => setShowSuggestModal(true)}
+                className="hidden sm:flex bg-green-600 text-white px-5 py-3 rounded-2xl font-black text-sm items-center gap-2 hover:bg-green-700 transition-all shadow-lg shadow-green-100/50"
+              >
+                <Lightbulb size={20} />
+                <span className="hidden lg:inline">SUGGEST ITEM</span>
+              </button>
+            )}
+
             <div className="hidden sm:block w-[1px] h-8 bg-gray-100 mx-1"></div>
             <Link
               href="/history"
@@ -605,6 +741,16 @@ function GroceryContent() {
           className="sm:hidden fixed bottom-6 right-6 z-[60] bg-black text-white p-5 rounded-full shadow-2xl shadow-gray-400 hover:scale-110 active:scale-95 transition-all flex items-center justify-center"
         >
           <Plus size={28} strokeWidth={3} />
+        </button>
+      )}
+
+      {/* Floating Action Button for Mobile (Standard User Suggestion) */}
+      {user?.role !== "admin" && (
+        <button
+          onClick={() => setShowSuggestModal(true)}
+          className="sm:hidden fixed bottom-6 right-6 z-[60] bg-green-600 text-white p-5 rounded-full shadow-2xl shadow-green-400/50 hover:scale-110 active:scale-95 transition-all flex items-center justify-center"
+        >
+          <Lightbulb size={28} strokeWidth={2.5} />
         </button>
       )}
 
@@ -642,182 +788,48 @@ function GroceryContent() {
                 </p>
               </div>
             ) : products.length === 0 ? (
-              <div className="py-20 text-center bg-white rounded-[3rem] border border-dashed border-gray-100">
+              <div className="py-20 text-center bg-white rounded-[3rem] border border-dashed border-gray-100 flex flex-col items-center justify-center p-6">
                 <p className="text-gray-300 font-black text-2xl uppercase">
-                  No products yet
+                  No products found
                 </p>
-                <p className="text-gray-400 font-medium mt-2">Contact Admin</p>
+                <p className="text-gray-400 font-medium mt-2 mb-6">
+                  {searchQuery ? `Can't find "${searchQuery}"?` : "Get started by suggesting an item."}
+                </p>
+                {user?.role !== "admin" ? (
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => {
+                      setSuggestProd({
+                        nameEn: searchQuery,
+                        nameKn: "",
+                        comments: "",
+                      });
+                      setShowSuggestModal(true);
+                    }}
+                    icon={<Lightbulb size={18} />}
+                  >
+                    SUGGEST THIS ITEM
+                  </Button>
+                ) : (
+                  <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">
+                    Use floating button to add product
+                  </p>
+                )}
               </div>
             ) : (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6">
                   {products.map((p) => (
-                    <div
+                    <ProductCard
                       key={p.id}
-                      className="bg-white rounded-2xl sm:rounded-[2.5rem] p-2 sm:p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 hover:shadow-[0_20px_50px_rgba(34,197,94,0.1)] hover:border-green-100/50 hover:-translate-y-1 transition-all duration-500 group relative flex flex-col h-full mt-1 sm:mt-2"
-                    >
-                      {/* Image Layer */}
-                      <div className="aspect-[4/3] bg-gray-50 rounded-xl sm:rounded-[2rem] mb-3 sm:mb-6 overflow-hidden relative group/img shrink-0">
-                        <img
-                          src={p.image}
-                          alt={p.nameEn}
-                          className="w-full h-full object-cover group-hover/img:scale-110 transition-all duration-1000 ease-out"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500" />
-
-                        {/* Status Badges */}
-                        {getCartItem(p) && (
-                          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-left-4 duration-500">
-                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-[10px] font-black text-gray-900 uppercase tracking-tight">
-                              {getCartItem(p)?.quantity} in cart
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Admin Controls */}
-                        {user?.role === "admin" && (
-                          <div className="absolute top-4 right-4 flex flex-col gap-2 translate-x-12 opacity-0 group-hover/img:translate-x-0 group-hover/img:opacity-100 transition-all duration-500">
-                            <button
-                              onClick={() => openEditModal(p)}
-                              className="p-2.5 bg-white/95 backdrop-blur-md text-gray-600 rounded-2xl hover:bg-white hover:text-green-600 shadow-2xl border border-white/50 transform hover:scale-110 transition-all"
-                            >
-                              <Edit2 size={18} />
-                            </button>
-                            <button
-                              onClick={() => deleteProduct(p.id)}
-                              className="p-2.5 bg-white/95 backdrop-blur-md text-red-500 rounded-2xl hover:bg-red-50 shadow-2xl border border-white/50 transform hover:scale-110 transition-all"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Content Layer */}
-                      <div className="px-0.5 sm:px-2 flex flex-col flex-1">
-                        <div className="mb-2 sm:mb-4">
-                          <h3 className="font-black text-sm sm:text-xl leading-tight text-gray-900 group-hover:text-green-600 transition-colors duration-300 truncate">
-                            {p.nameEn}
-                          </h3>
-                          {p.nameKn && (
-                            <p className="text-gray-400 font-bold text-sm mt-1">
-                              {p.nameKn}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="mt-auto space-y-2 sm:space-y-4">
-                          {/* Quantity Selector */}
-                          <div className="grid grid-cols-1 gap-2 p-1.5 bg-gray-100/30 backdrop-blur-sm rounded-[1.5rem] border border-gray-100 group-hover:bg-white transition-all duration-500">
-                            {/* Number Input Side */}
-                            <div className="flex items-center justify-between bg-white rounded-2xl p-1 shadow-sm border border-gray-100/50">
-                              <button
-                                onClick={() => {
-                                  const val = parseFloat(
-                                    prodAmounts[String(p.id)] || "0",
-                                  );
-                                  setProdAmounts({
-                                    ...prodAmounts,
-                                    [String(p.id)]: String(
-                                      Math.max(0, val - 1),
-                                    ),
-                                  });
-                                }}
-                                className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all font-black"
-                              >
-                                -
-                              </button>
-                              <input
-                                type="number"
-                                min="0"
-                                className="w-full bg-transparent text-sm font-black text-center outline-none text-gray-900 min-w-0"
-                                value={prodAmounts[String(p.id)] || "0"}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  if (val === "" || parseFloat(val) >= 0) {
-                                    setProdAmounts({
-                                      ...prodAmounts,
-                                      [String(p.id)]: val,
-                                    });
-                                  }
-                                }}
-                              />
-                              <button
-                                onClick={() => {
-                                  const val = parseFloat(
-                                    prodAmounts[String(p.id)] || "0",
-                                  );
-                                  setProdAmounts({
-                                    ...prodAmounts,
-                                    [String(p.id)]: String(val + 1),
-                                  });
-                                }}
-                                className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all font-black"
-                              >
-                                +
-                              </button>
-                            </div>
-
-                            {/* Unit Select Side */}
-                            <div className="relative">
-                              <select
-                                className="w-full h-full bg-white rounded-2xl py-3 pl-4 pr-10 text-[11px] font-black uppercase outline-none appearance-none cursor-pointer shadow-sm border border-gray-100/50 focus:border-green-200 transition-all text-gray-900"
-                                value={prodUnits[String(p.id)] || "kg"}
-                                onChange={(e) =>
-                                  setProdUnits({
-                                    ...prodUnits,
-                                    [String(p.id)]: e.target.value,
-                                  })
-                                }
-                              >
-                                {QUANTITY_UNITS.map((u) => (
-                                  <option
-                                    key={u}
-                                    value={u}
-                                    className="text-gray-900 font-bold"
-                                  >
-                                    {u}
-                                  </option>
-                                ))}
-                              </select>
-                              <ChevronDown
-                                size={14}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Action Button */}
-                          <button
-                            onClick={() => {
-                              const amt = prodAmounts[String(p.id)] || "0";
-                              if (parseFloat(amt) <= 0)
-                                return toast.error("Select quantity");
-                              addToCart(
-                                p.nameKn
-                                  ? `${p.nameEn} (${p.nameKn})`
-                                  : p.nameEn,
-                                `${amt} ${prodUnits[String(p.id)] || "kg"}`,
-                                p.image,
-                              );
-                              setProdAmounts({
-                                ...prodAmounts,
-                                [String(p.id)]: "0",
-                              });
-                            }}
-                            className="w-full bg-green-600 text-white py-3 sm:py-4.5 rounded-[1.25rem] sm:rounded-[1.5rem] font-black text-[8px] min-[320px]:text-[9px] sm:text-xs tracking-tight sm:tracking-[0.2em] whitespace-nowrap hover:bg-green-700 hover:shadow-[0_15px_30px_rgba(34,197,94,0.3)] transform active:scale-[0.98] transition-all duration-500 flex items-center justify-center gap-1 sm:gap-3 mb-1 sm:mb-2 shadow-lg shadow-green-100/50 px-1 sm:px-2"
-                          >
-                            <Plus
-                              size={12}
-                              className="sm:w-5 sm:h-5"
-                              strokeWidth={4}
-                            />
-                            ADD TO CART
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                      product={p}
+                      isAdmin={user?.role === "admin"}
+                      cartItem={getCartItem(p)}
+                      onEditProduct={openEditModal}
+                      onDeleteProduct={deleteProduct}
+                      onAddToCart={addToCart}
+                    />
                   ))}
                 </div>
 
@@ -958,18 +970,16 @@ function GroceryContent() {
               </div>
 
               {cartItems.length > 0 && (
-                <button
+                <Button
+                  variant="dark"
+                  size="md"
                   onClick={saveAndShare}
-                  disabled={isSaving}
-                  className="w-full bg-black text-white py-5 rounded-3xl font-black text-sm flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-xl shadow-gray-200"
+                  isLoading={isSaving}
+                  icon={<Send size={20} />}
+                  className="w-full py-5 rounded-3xl"
                 >
-                  {isSaving ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <Send size={20} />
-                  )}{" "}
-                  {isSaving ? "SHARING..." : "SEND LIST"}
-                </button>
+                  SEND LIST
+                </Button>
               )}
             </div>
           </div>

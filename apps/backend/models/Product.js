@@ -10,4 +10,8 @@ const productSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Indexes for optimized searching and sorting
+productSchema.index({ nameEn: 1 });
+productSchema.index({ nameKn: 1 });
+
 module.exports = mongoose.model("Product", productSchema);
