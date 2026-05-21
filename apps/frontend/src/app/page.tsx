@@ -30,6 +30,7 @@ import {
   Mic,
   MicOff,
   Lightbulb,
+  Layers,
 } from "lucide-react";
 import { toast, Toaster } from "react-hot-toast";
 import Link from "next/link";
@@ -911,13 +912,23 @@ function GroceryContent() {
           <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             {/* Desktop Add Button (Admin Only) */}
             {user?.role === "admin" && (
-              <button
-                onClick={() => setShowManualModal(true)}
-                className="hidden sm:flex bg-black text-white px-5 py-3 rounded-2xl font-black text-sm items-center gap-2 hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
-              >
-                <PackagePlus size={20} />
-                <span className="hidden lg:inline">ADD PRODUCT</span>
-              </button>
+              <>
+                <Link href="/admin/suggestions">
+                  <button
+                    className="hidden sm:flex bg-green-600 text-white px-5 py-3 rounded-2xl font-black text-sm items-center gap-2 hover:bg-green-700 transition-all shadow-lg shadow-green-100/50"
+                  >
+                    <Layers size={20} />
+                    <span className="hidden lg:inline">DASHBOARD</span>
+                  </button>
+                </Link>
+                <button
+                  onClick={() => setShowManualModal(true)}
+                  className="hidden sm:flex bg-black text-white px-5 py-3 rounded-2xl font-black text-sm items-center gap-2 hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
+                >
+                  <PackagePlus size={20} />
+                  <span className="hidden lg:inline">ADD PRODUCT</span>
+                </button>
+              </>
             )}
 
             {/* Desktop Suggest Button (Standard User Only) */}
@@ -931,15 +942,17 @@ function GroceryContent() {
               </button>
             )}
 
-            <div className="hidden sm:block w-[1px] h-8 bg-gray-100 mx-1"></div>
-            {user && (
-              <button
-                onClick={() => setShowSuggestionsListModal(true)}
-                className="p-2 sm:p-3 bg-gray-50 rounded-full hover:bg-green-50 text-gray-500 hover:text-green-600 transition-all"
-                title="View Suggestions"
-              >
-                <MessageCircle size={20} className="sm:w-[22px] sm:h-[22px]" />
-              </button>
+            {user && user.role !== "admin" && (
+              <>
+                <div className="hidden sm:block w-[1px] h-8 bg-gray-100 mx-1"></div>
+                <button
+                  onClick={() => setShowSuggestionsListModal(true)}
+                  className="p-2 sm:p-3 bg-gray-50 rounded-full hover:bg-green-50 text-gray-500 hover:text-green-600 transition-all"
+                  title="View Suggestions"
+                >
+                  <MessageCircle size={20} className="sm:w-[22px] sm:h-[22px]" />
+                </button>
+              </>
             )}
             <Link
               href="/history"
@@ -985,19 +998,31 @@ function GroceryContent() {
               <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
                 Your Groceries
               </h1>
-              <button
-                onClick={() =>
-                  cartRef.current?.scrollIntoView({ behavior: "smooth" })
-                }
-                className="lg:hidden p-3 bg-green-50 text-green-600 rounded-2xl border border-green-100 flex items-center gap-2 relative group"
-              >
-                <ShoppingCart size={24} />
-                {cartItems.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-green-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black animate-in zoom-in duration-300">
-                    {cartItems.length}
-                  </span>
+              <div className="flex items-center gap-2">
+                {user?.role === "admin" && (
+                  <Link href="/admin/suggestions" className="lg:hidden">
+                    <button
+                      className="p-3 bg-green-50 text-green-600 rounded-2xl border border-green-100 flex items-center justify-center hover:bg-green-100 transition-all"
+                      title="Admin Suggestions Dashboard"
+                    >
+                      <Layers size={24} />
+                    </button>
+                  </Link>
                 )}
-              </button>
+                <button
+                  onClick={() =>
+                    cartRef.current?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className="lg:hidden p-3 bg-green-50 text-green-600 rounded-2xl border border-green-100 flex items-center gap-2 relative group"
+                >
+                  <ShoppingCart size={24} />
+                  {cartItems.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-green-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black animate-in zoom-in duration-300">
+                      {cartItems.length}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
 
             {isLoadingProducts ? (

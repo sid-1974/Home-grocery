@@ -22,6 +22,7 @@ export interface Suggestion {
     email: string;
   } | string;
   status?: "pending" | "approved" | "rejected";
+  rejectionReason?: string;
   createdAt: string;
 }
 
