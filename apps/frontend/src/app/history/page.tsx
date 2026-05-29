@@ -43,6 +43,12 @@ export default function HistoryPage() {
   } | null>(null);
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      window.location.href = "/home";
+    }
+  }, [user, authLoading]);
+
+  useEffect(() => {
     if (user) {
       fetchHistory();
     }

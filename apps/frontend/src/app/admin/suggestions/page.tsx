@@ -43,6 +43,12 @@ export default function AdminSuggestionsPage() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      window.location.href = "/home";
+    }
+  }, [user, authLoading]);
+
+  useEffect(() => {
     if (user && user.role === "admin") {
       fetchSuggestions();
     }
