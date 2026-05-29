@@ -60,7 +60,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
       <Toaster />
-      <div className="max-w-md w-full bg-white rounded-[2.5rem] p-12 shadow-2xl shadow-gray-200">
+      <div className="max-w-md w-full bg-white rounded-[2.5rem] p-6 sm:p-12 shadow-2xl shadow-gray-200">
         <div className="flex justify-center mb-6">
           <div className="bg-white/10 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
             <img src="/icon.png" alt="Home Grocery Logo" className="w-16 h-16 object-cover" />
@@ -187,7 +187,7 @@ export default function LoginPage() {
             </form>
             <p className="text-center mt-8 text-gray-500">
               Don't have an account?{" "}
-              <Link href="/register" className="text-green-600 font-bold">
+              <Link href="/register" className="text-green-600 font-bold whitespace-nowrap">
                 Sign Up
               </Link>
             </p>

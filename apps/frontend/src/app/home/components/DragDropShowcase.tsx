@@ -2,8 +2,9 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ShoppingCart } from "lucide-react";
+import { Check } from "lucide-react";
 import { AppleSvg, BasketSvg, FRUITS_MAP, FRUIT_ITEMS } from "@/components/fruitSvg";
+import { CongratsModal } from "@/components/CongratsModal";
 
 export default function DragDropShowcase() {
   const shelfRef = useRef<HTMLDivElement | null>(null);
@@ -15,6 +16,7 @@ export default function DragDropShowcase() {
   const [isBasketBouncing, setIsBasketBouncing] = useState(false);
   const [addedFruits, setAddedFruits] = useState<string[]>([]);
   const [fallingItems, setFallingItems] = useState<Array<{ id: string; type: string; x: number; y: number }>>([]);
+  const [showCongratsModal, setShowCongratsModal] = useState(false);
 
   // Handle Drag End coordinates and updates
   const handleDragEnd = (event: any, info: any, itemType: string) => {
@@ -37,8 +39,13 @@ export default function DragDropShowcase() {
 
       // Add to added list to swap with placeholder on shelf
       setAddedFruits((prev) => {
-        if (prev.includes(itemType)) return prev;
-        return [...prev, itemType];
+        const nextAdded = prev.includes(itemType) ? prev : [...prev, itemType];
+        if (nextAdded.length === 4) {
+          setTimeout(() => {
+            setShowCongratsModal(true);
+          }, 1000);
+        }
+        return nextAdded;
       });
 
       // Spawn falling overlay element
@@ -86,22 +93,7 @@ export default function DragDropShowcase() {
               Test the physics right here. Drag any fruit from the wooden shelf on the right and drop it directly into the shopping cart below.
             </p>
 
-            {/* Status Alert Banner */}
-            <AnimatePresence mode="wait">
-              {successMessage && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="p-4 bg-emerald-800/60 border border-emerald-600/40 rounded-2xl flex items-center gap-3"
-                >
-                  <div className="bg-emerald-500 p-1.5 rounded-full text-white shrink-0">
-                    <Check size={14} className="stroke-[3]" />
-                  </div>
-                  <span className="text-sm font-bold text-emerald-100">{successMessage}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
+
 
             {/* Counter Display */}
             <div className="flex items-center gap-4 pt-4 border-t border-emerald-800/50">
@@ -132,13 +124,32 @@ export default function DragDropShowcase() {
             {/* Shopping basket target */}
             <div
               ref={dropTargetRef}
-              className="w-full max-w-[280px] bg-emerald-950/60 border-2 border-dashed border-emerald-700/50 rounded-3rem p-6 flex flex-col items-center justify-center min-h-[220px] transition-all relative overflow-hidden group"
+              className="w-full max-w-[280px] bg-emerald-950/60 border-2 border-dashed border-emerald-700/50 rounded-3rem p-6 flex flex-col items-center justify-center min-h-[220px] transition-all relative group"
             >
               <div className="absolute top-3 right-3">
                 <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase rounded">
                   Drop Zone
                 </span>
               </div>
+
+              {/* Status Alert Popup - Absolute overlay */}
+              <AnimatePresence>
+                {successMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                    className="absolute inset-x-4 top-4 z-30 p-3 bg-emerald-800 border border-emerald-600/60 rounded-2xl flex items-center justify-center gap-2 shadow-2xl backdrop-blur-md"
+                  >
+                    <div className="bg-emerald-500 p-1 rounded-full text-white shrink-0">
+                      <Check size={12} className="stroke-[3]" />
+                    </div>
+                    <span className="text-[11px] font-black text-emerald-50 text-center leading-tight">
+                      {successMessage}
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Falling Fruits Animation Overlay */}
               <div className="absolute inset-0 pointer-events-none z-20">
@@ -250,6 +261,19 @@ export default function DragDropShowcase() {
             </div>
           </div>
         </div>
+        {/* Congrats Modal Overlay */}
+        <CongratsModal
+          isOpen={showCongratsModal}
+          onClose={() => {
+            setShowCongratsModal(false);
+            setCartCount(0);
+            setAddedFruits([]);
+            setFallingItems([]);
+          }}
+          onShare={() => {
+            window.location.href = "/login";
+          }}
+        />
       </div>
     </section>
   );
