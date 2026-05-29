@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Users, Languages, Mic, Share2 } from "lucide-react";
+import { Users, Languages, Mic, Lightbulb } from "lucide-react";
 
 export default function FeaturesSection() {
   const features = [
@@ -21,9 +21,9 @@ export default function FeaturesSection() {
       desc: "Busy kitchen? Simply speak your grocery items (supports both English and Kannada accents) and watch them instantly match to items.",
     },
     {
-      icon: <Share2 size={24} />,
-      title: "Zero Delays",
-      desc: "Real-time connection with local databases ensures lightning-fast load times. App works offline, saving changes locally.",
+      icon: <Lightbulb size={24} />,
+      title: "Item Suggestions",
+      desc: "Missing an item? Suggest any product using our built-in tool, and admins will add it to the catalog within 24 hours!",
     },
   ];
 
