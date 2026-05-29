@@ -39,6 +39,7 @@ import { Product, CartItem, Suggestion, QUANTITY_UNITS } from "@/types";
 import { Button } from "@/components/Button";
 import { ProductCard } from "@/components/ProductCard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { VoiceListeningModal } from "@/components/VoiceListeningModal";
 
 
 
@@ -53,6 +54,29 @@ function GroceryContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const [showTranslateHint, setShowTranslateHint] = useState(true);
+
+  useEffect(() => {
+    // 1. Initial page load: show for 3 seconds, then collapse
+    const initialTimeout = setTimeout(() => {
+      setShowTranslateHint(false);
+    }, 3000);
+
+    // 2. Setup the loop to show the hint for 3 seconds every 10 seconds of off-time (13 seconds total interval)
+    const interval = setInterval(() => {
+      setShowTranslateHint(true);
+      const activeTimeout = setTimeout(() => {
+        setShowTranslateHint(false);
+      }, 3000);
+      return () => clearTimeout(activeTimeout);
+    }, 13000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Debounce search keystrokes to prevent rendering lag
   useEffect(() => {
@@ -132,14 +156,25 @@ function GroceryContent() {
       return;
     }
 
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.abort();
+      setIsListening(false);
+      return;
+    }
+
     const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
     recognition.lang = searchLang;
     recognition.interimResults = false;
 
     recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
     recognition.onerror = () => {
       setIsListening(false);
+      recognitionRef.current = null;
       toast.error("Voice search failed");
     };
 
@@ -153,6 +188,21 @@ function GroceryContent() {
 
     recognition.start();
   };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+    }
+    setIsListening(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, []);
 
   const fetchProducts = useCallback(async () => {
     setIsLoadingProducts(true);
@@ -485,6 +535,13 @@ function GroceryContent() {
   return (
     <div className="min-h-screen bg-[#f8f9fa]">
       <Toaster />
+
+      {/* Voice Listening Overlay Modal */}
+      <VoiceListeningModal
+        isOpen={isListening}
+        searchLang={searchLang}
+        onCancel={stopListening}
+      />
 
       {/* Suggest Product Modal */}
       {showSuggestModal && (
@@ -886,7 +943,9 @@ function GroceryContent() {
             />
             <input
               placeholder="Search..."
-              className="w-full bg-gray-100 rounded-2xl py-2.5 sm:py-3 pl-10 sm:pl-12 pr-28 outline-none focus:ring-2 focus:ring-green-500 transition-all font-bold text-gray-700 text-sm sm:text-base"
+              className={`w-full bg-gray-100 rounded-2xl py-2.5 sm:py-3 pl-10 sm:pl-12 outline-none focus:ring-2 focus:ring-green-500 transition-all duration-500 font-bold text-gray-700 text-sm sm:text-base ${
+                showTranslateHint ? "pr-48" : "pr-28"
+              }`}
               value={localSearchQuery}
               onFocus={() => setShowSearchSuggestions(true)}
               onChange={(e) => {
@@ -894,24 +953,32 @@ function GroceryContent() {
                 setPage(1);
               }}
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
               <button
                 onClick={() =>
                   setSearchLang(searchLang === "en-IN" ? "kn-IN" : "en-IN")
                 }
-                className="text-[10px] font-black bg-white px-2 py-1 rounded-lg border border-gray-100 text-gray-600 hover:text-green-600 transition-all shadow-sm"
+                className="h-8 flex items-center gap-1 text-[10px] font-black bg-white px-2.5 rounded-lg border border-gray-100 text-gray-600 hover:text-green-600 hover:border-green-200 transition-all duration-500 shadow-sm overflow-hidden"
               >
-                {searchLang === "en-IN" ? "EN" : "KN"}
+                <Languages size={12} className="text-green-600 shrink-0" />
+                <span className="shrink-0">{searchLang === "en-IN" ? "EN" : "KN"}</span>
+                <span
+                  className={`transition-all duration-500 ease-in-out overflow-hidden text-[9px] font-bold text-gray-400 shrink-0 ${
+                    showTranslateHint ? "max-w-[80px] ml-1 opacity-100" : "max-w-0 opacity-0"
+                  }`}
+                >
+                  {searchLang === "en-IN" ? "Translate here" : "ಇಲ್ಲಿ ಭಾಷಾಂತರಿಸಿ"}
+                </span>
               </button>
               <button
                 onClick={startListening}
-                className={`p-2 rounded-xl transition-all ${
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all border ${
                   isListening
-                    ? "bg-red-100 text-red-600 animate-pulse"
-                    : "bg-white text-gray-400 hover:text-green-600 shadow-sm"
+                    ? "bg-red-100 text-red-600 border-red-200 animate-pulse"
+                    : "bg-white text-gray-400 hover:text-green-600 border-gray-100 shadow-sm"
                 }`}
               >
-                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+                {isListening ? <MicOff size={16} /> : <Mic size={16} />}
               </button>
             </div>
           </div>
