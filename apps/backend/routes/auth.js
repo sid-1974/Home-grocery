@@ -40,7 +40,7 @@ router.post("/send-register-otp", async (req, res) => {
     console.log(`\n[DEV] Registration OTP for ${email}: ${otp}\n`);
 
     const emailHtml = getOtpTemplate(otp);
-    sendMail(email, "Your Registration OTP", emailHtml).catch(console.error);
+    await sendMail(email, "Your Registration OTP", emailHtml);
 
     res.json({ message: "OTP sent successfully" });
   } catch (err) {
@@ -72,10 +72,10 @@ router.post("/register", async (req, res) => {
     user = new User({ email, password });
     await user.save();
 
-    // Send welcome email in background
+    // Send welcome email (Must wait for it in Vercel)
     const frontendUrl = process.env.FRONTEND_URL;
     const emailHtml = getRegistrationTemplate(email, frontendUrl);
-    sendMail(email, "Welcome to Home Grocery! 🛒", emailHtml).catch(console.error);
+    await sendMail(email, "Welcome to Home Grocery! 🛒", emailHtml);
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -137,7 +137,7 @@ router.post("/send-reset-otp", async (req, res) => {
     console.log(`\n[DEV] Password Reset OTP for ${email}: ${otp}\n`);
 
     const emailHtml = getOtpTemplate(otp);
-    sendMail(email, "Your Password Reset OTP", emailHtml).catch(console.error);
+    await sendMail(email, "Your Password Reset OTP", emailHtml);
 
     res.json({ message: "OTP sent successfully" });
   } catch (err) {
