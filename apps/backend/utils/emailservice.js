@@ -34,15 +34,16 @@ const sendMail = async (email, subject, htmlContent, customAttachments = []) => 
     // Default attachments, including the inline logo
     const attachments = [...customAttachments];
     
-    // Resolve frontend logo path to attach inline
+    // Resolve frontend logo path to attach inline only if the template uses it
     const logoPath = path.join(__dirname, "../../frontend/public/icon.png");
-    if (fs.existsSync(logoPath)) {
+    if (htmlContent.includes("cid:logo") && fs.existsSync(logoPath)) {
       attachments.push({
         filename: "icon.png",
         path: logoPath,
         cid: "logo", // Matches <img src="cid:logo"> in templates
+        contentDisposition: "inline", // Prevents the image from showing as a downloadable file
       });
-    } else {
+    } else if (htmlContent.includes("cid:logo")) {
       console.warn("Logo file not found at:", logoPath);
     }
 
@@ -59,6 +60,7 @@ const sendMail = async (email, subject, htmlContent, customAttachments = []) => 
     return info;
   } catch (error) {
     console.error("Error sending email:", error);
+    throw error;
   }
 };
 

@@ -4,22 +4,72 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { sendMail } = require("../utils/emailservice");
-const { getRegistrationTemplate } = require("../utils/emailTemplates");
+const { getRegistrationTemplate, getOtpTemplate } = require("../utils/emailTemplates");
+const otpServices = require("../utils/otpServices");
+const { validate: validateEmailDeep } = require("deep-email-validator");
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Send OTP for Registration
+router.post("/send-register-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({ message: "It's not a valid email address format" });
+    }
+
+    const emailValidation = await validateEmailDeep(email);
+    if (!emailValidation.valid) {
+      if (emailValidation.reason === "smtp") {
+        return res.status(400).json({ message: "Email address not found or unable to receive mail" });
+      }
+      return res.status(400).json({ message: "It's not a valid or reachable email address" });
+    }
+
+    let user = await User.findOne({ email });
+    if (user) return res.status(400).json({ message: "User already exists" });
+
+    const otp = otpServices.create();
+    otpServices.store(email, otp);
+    console.log(`\n[DEV] Registration OTP for ${email}: ${otp}\n`);
+
+    const emailHtml = getOtpTemplate(otp);
+    sendMail(email, "Your Registration OTP", emailHtml).catch(console.error);
+
+    res.json({ message: "OTP sent successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 // Register
 router.post("/register", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, otp } = req.body;
+    
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({ message: "It's not a valid email address" });
+    }
+
+    if (!otp) {
+      return res.status(400).json({ message: "OTP is required" });
+    }
+
+    const otpResult = otpServices.verify(email, otp);
+    if (!otpResult.success) {
+      return res.status(400).json({ message: otpResult.message });
+    }
+
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: "User already exists" });
 
     user = new User({ email, password });
     await user.save();
 
-    // Send welcome email
+    // Send welcome email in background
     const frontendUrl = process.env.FRONTEND_URL;
     const emailHtml = getRegistrationTemplate(email, frontendUrl);
-    await sendMail(email, "Welcome to Home Grocery! 🛒", emailHtml);
+    sendMail(email, "Welcome to Home Grocery! 🛒", emailHtml).catch(console.error);
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -39,8 +89,13 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({ message: "It's not a valid email address" });
+    }
+
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) return res.status(400).json({ message: "Email address not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
@@ -60,17 +115,70 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Send OTP for Password Reset
+router.post("/send-reset-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({ message: "It's not a valid email address" });
+    }
+
+    let user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "Email address not found" });
+
+    const otp = otpServices.create();
+    otpServices.store(email, otp);
+    console.log(`\n[DEV] Password Reset OTP for ${email}: ${otp}\n`);
+
+    const emailHtml = getOtpTemplate(otp);
+    sendMail(email, "Your Password Reset OTP", emailHtml).catch(console.error);
+
+    res.json({ message: "OTP sent successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Verify OTP for Password Reset (Without consuming it)
+router.post("/verify-reset-otp", async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({ message: "It's not a valid email address" });
+    }
+    if (!otp) return res.status(400).json({ message: "OTP is required" });
+
+    const result = otpServices.check(email, otp);
+    if (!result.success) return res.status(400).json({ message: result.message });
+
+    res.json({ message: "OTP verified successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Reset Password
 router.post("/reset-password", async (req, res) => {
   try {
-    const { email, newPassword } = req.body;
-    if (!email || !newPassword) {
-      return res.status(400).json({ message: "Email and new password are required" });
+    const { email, newPassword, otp } = req.body;
+    
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({ message: "It's not a valid email address" });
+    }
+    
+    if (!newPassword || !otp) {
+      return res.status(400).json({ message: "New password, and OTP are required" });
+    }
+
+    // Use check to validate OTP without consuming it yet
+    const otpResult = otpServices.check(email, otp);
+    if (!otpResult.success) {
+      return res.status(400).json({ message: otpResult.message });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "Email address not found" });
     }
 
     // Check if new password is same as old password
@@ -78,6 +186,9 @@ router.post("/reset-password", async (req, res) => {
     if (isSame) {
       return res.status(400).json({ message: "New password cannot be the same as your old password" });
     }
+
+    // All validations passed, consume the OTP
+    otpServices.verify(email, otp);
 
     user.password = newPassword;
     await user.save();

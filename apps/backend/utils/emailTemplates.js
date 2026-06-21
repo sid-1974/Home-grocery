@@ -533,8 +533,34 @@ const getSuggestionStatusUpdateTemplate = (nameEn, nameKn = "", status, rejectio
   `;
 };
 
+const getOtpTemplate = (otp) => {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Your OTP Code</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background-color: #f9fafb; margin: 0; padding: 40px 0; }
+    .container { max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; padding: 40px; text-align: center; }
+    .otp { font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #16a34a; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Verify Your Email</h2>
+    <p>Please use the following One-Time Password (OTP) to complete your request. This code is valid for 5 minutes.</p>
+    <div class="otp">${otp}</div>
+    <p>If you did not request this, please ignore this email.</p>
+  </div>
+</body>
+</html>
+  `;
+};
+
 module.exports = {
   getRegistrationTemplate,
   getSuggestionTemplate,
-  getSuggestionStatusUpdateTemplate
+  getSuggestionStatusUpdateTemplate,
+  getOtpTemplate
 };
