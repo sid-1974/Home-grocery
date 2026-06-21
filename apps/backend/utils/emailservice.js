@@ -3,9 +3,12 @@ const path = require("path");
 const fs = require("fs");
 require("dotenv").config();
 
-// Initialize transporter with Gmail service configuration
+// Initialize transporter with explicit Gmail SMTP configuration
+// Using explicit host/port is more reliable in production/serverless environments than service: "gmail"
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   connectionTimeout: 10000, // 10 seconds
   greetingTimeout: 10000,   // 10 seconds
   socketTimeout: 15000,     // 15 seconds

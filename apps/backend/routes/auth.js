@@ -18,11 +18,17 @@ router.post("/send-register-otp", async (req, res) => {
       return res.status(400).json({ message: "It's not a valid email address format" });
     }
 
-    const emailValidation = await validateEmailDeep(email);
+    // Perform deep validation (disabling SMTP check since Vercel/AWS blocks outbound port 25)
+    const emailValidation = await validateEmailDeep({
+      email: email,
+      validateRegex: true,
+      validateMx: true,
+      validateTypo: true,
+      validateDisposable: true,
+      validateSMTP: false, 
+    });
+    
     if (!emailValidation.valid) {
-      if (emailValidation.reason === "smtp") {
-        return res.status(400).json({ message: "Email address not found or unable to receive mail" });
-      }
       return res.status(400).json({ message: "It's not a valid or reachable email address" });
     }
 
